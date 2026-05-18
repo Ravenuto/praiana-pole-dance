@@ -1,0 +1,33 @@
+{
+  "name": "Notice",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo do recado"
+    },
+    "content": {
+      "type": "string",
+      "description": "Conte\u00fado do recado"
+    },
+    "pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Fixado no topo"
+    },
+    "color": {
+      "type": "string",
+      "enum": [
+        "blue",
+        "yellow",
+        "green",
+        "red"
+      ],
+      "default": "blue"
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}

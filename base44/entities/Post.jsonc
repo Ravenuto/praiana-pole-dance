@@ -1,0 +1,41 @@
+{
+  "name": "Post",
+  "type": "object",
+  "properties": {
+    "author_name": {
+      "type": "string",
+      "description": "Nome da autora"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email da autora"
+    },
+    "caption": {
+      "type": "string",
+      "description": "Legenda do post"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL da imagem ou v\u00eddeo"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "default": "image"
+    },
+    "likes": {
+      "type": "array",
+      "description": "Lista de emails que curtiram",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "author_email",
+    "media_url"
+  ]
+}

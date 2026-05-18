@@ -28,10 +28,13 @@ export default function Home() {
               <Sparkles className="h-3.5 w-3.5" />
               Pole Dance & Artes
             </div>
+            <div className="flex justify-center mb-4">
+              <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/943b83331_5.png" alt="Praiana Pole Dance" className="w-32 h-32 object-contain" />
+            </div>
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              Encontre sua
-              <span className="text-primary italic"> força</span> e
-              <span className="text-primary italic"> elegância</span>
+              Praiana
+              <span className="text-primary italic"> Pole Dance</span>
+              <span className="block text-2xl sm:text-3xl font-normal text-muted-foreground mt-2">& Artes</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
               Agende suas aulas de forma prática e rápida. Escolha a modalidade, o horário e garanta sua vaga.
@@ -109,8 +112,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border mt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center text-sm text-muted-foreground">
-          <p className="font-heading text-lg font-semibold text-foreground mb-1">Studio</p>
-          <p>Pole Dance & Artes</p>
+          <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/943b83331_5.png" alt="Praiana" className="w-12 h-12 object-contain mx-auto mb-2" />
+          <p className="font-heading text-lg font-semibold text-foreground mb-1">Praiana Pole Dance & Artes</p>
         </div>
       </footer>
     </div>

@@ -1,0 +1,27 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "post_id": {
+      "type": "string",
+      "description": "ID do post"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Nome da autora"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email da autora"
+    },
+    "text": {
+      "type": "string",
+      "description": "Texto do coment\u00e1rio"
+    }
+  },
+  "required": [
+    "post_id",
+    "author_email",
+    "text"
+  ]
+}

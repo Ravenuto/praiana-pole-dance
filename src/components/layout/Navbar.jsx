@@ -15,6 +15,8 @@ export default function Navbar() {
     { to: "/", label: "Início" },
     { to: "/aulas", label: "Agendar Aula" },
     { to: "/minhas-reservas", label: "Minhas Reservas" },
+    { to: "/feed", label: "Feed" },
+    { to: "/recados", label: "Recados" },
   ];
 
   if (isAdmin) {
@@ -28,10 +30,8 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-heading text-sm font-bold">S</span>
-            </div>
-            <span className="font-heading text-lg font-semibold tracking-tight">Studio</span>
+            <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/943b83331_5.png" alt="Praiana" className="w-8 h-8 object-contain" />
+            <span className="font-heading text-lg font-semibold tracking-tight">Praiana</span>
           </Link>
 
           {/* Desktop */}

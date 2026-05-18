@@ -16,6 +16,8 @@ import Home from '@/pages/Home';
 import Schedule from '@/pages/Schedule';
 import MyBookings from '@/pages/MyBookings';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
+import Feed from '@/pages/Feed';
+import Notices from '@/pages/Notices';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -52,6 +54,8 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Home />} />
           <Route path="/aulas" element={<Schedule />} />
           <Route path="/minhas-reservas" element={<MyBookings />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/recados" element={<Notices />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Route>
       </Route>
