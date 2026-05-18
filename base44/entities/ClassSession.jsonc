@@ -1,0 +1,63 @@
+{
+  "name": "ClassSession",
+  "type": "object",
+  "properties": {
+    "class_type_id": {
+      "type": "string",
+      "description": "ID da modalidade"
+    },
+    "class_type_name": {
+      "type": "string",
+      "description": "Nome da modalidade (para exibi\u00e7\u00e3o r\u00e1pida)"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da aula"
+    },
+    "time": {
+      "type": "string",
+      "description": "Hor\u00e1rio da aula (HH:mm)"
+    },
+    "day_of_week": {
+      "type": "string",
+      "enum": [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo"
+      ],
+      "description": "Dia da semana"
+    },
+    "instructor": {
+      "type": "string",
+      "description": "Nome da instrutora"
+    },
+    "max_students": {
+      "type": "number",
+      "default": 8
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se \u00e9 aula recorrente semanal"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre a aula"
+    }
+  },
+  "required": [
+    "class_type_id",
+    "class_type_name",
+    "day_of_week",
+    "time"
+  ]
+}

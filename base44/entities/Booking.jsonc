@@ -1,0 +1,47 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "ID da sess\u00e3o de aula"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da aula reservada"
+    },
+    "session_time": {
+      "type": "string",
+      "description": "Hor\u00e1rio da aula"
+    },
+    "class_type_name": {
+      "type": "string",
+      "description": "Nome da modalidade"
+    },
+    "student_name": {
+      "type": "string",
+      "description": "Nome da aluna"
+    },
+    "student_email": {
+      "type": "string",
+      "description": "Email da aluna"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmada",
+        "cancelada",
+        "presente",
+        "faltou"
+      ],
+      "default": "confirmada"
+    }
+  },
+  "required": [
+    "session_id",
+    "session_date",
+    "class_type_name",
+    "student_email"
+  ]
+}
