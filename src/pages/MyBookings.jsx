@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import CreditBanner from "@/components/schedule/CreditBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -52,6 +53,7 @@ export default function MyBookings() {
         <p className="mt-2 text-muted-foreground">Acompanhe suas aulas agendadas</p>
       </div>
 
+      <CreditBanner />
       <div className="space-y-3">
         {isLoading ? (
           Array(4)

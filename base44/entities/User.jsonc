@@ -1,0 +1,26 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "The role of the user in the app",
+      "enum": [
+        "admin",
+        "user"
+      ]
+    },
+    "plan": {
+      "type": "string",
+      "description": "Plano da aluna",
+      "enum": [
+        "1x_semana",
+        "2x_semana"
+      ],
+      "default": "1x_semana"
+    }
+  },
+  "required": [
+    "role"
+  ]
+}

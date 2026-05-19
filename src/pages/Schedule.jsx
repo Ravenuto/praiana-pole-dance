@@ -6,6 +6,7 @@ import { format, addDays, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
+import CreditBanner from "@/components/schedule/CreditBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
@@ -120,6 +121,7 @@ export default function Schedule() {
         <p className="mt-2 text-muted-foreground">Selecione o dia e reserve sua vaga</p>
       </div>
 
+      <CreditBanner />
       <DaySelector selected={selectedDay} onChange={setSelectedDay} />
 
       <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
