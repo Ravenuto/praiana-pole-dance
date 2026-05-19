@@ -78,10 +78,12 @@ export default function PostCard({ post, currentUser, onDelete }) {
       </div>
 
       {/* Media */}
-      {post.media_type === "video" ? (
-        <video src={post.media_url} controls className="w-full max-h-[500px] object-cover bg-black" />
-      ) : (
-        <img src={post.media_url} alt="post" className="w-full max-h-[500px] object-cover" />
+      {post.media_url && (
+        post.media_type === "video" ? (
+          <video src={post.media_url} controls className="w-full max-h-[500px] object-cover bg-black" />
+        ) : (
+          <img src={post.media_url} alt="post" className="w-full max-h-[500px] object-cover" />
+        )
       )}
 
       {/* Actions */}

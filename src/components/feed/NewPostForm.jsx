@@ -25,15 +25,19 @@ export default function NewPostForm({ currentUser }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return toast.error("Selecione uma foto ou vídeo");
+    if (!file && !caption.trim()) return toast.error("Escreva algo ou selecione uma mídia");
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    let file_url = null;
+    if (file) {
+      const result = await base44.integrations.Core.UploadFile({ file });
+      file_url = result.file_url;
+    }
     await base44.entities.Post.create({
       author_name: currentUser?.full_name || currentUser?.email,
       author_email: currentUser?.email,
       caption: caption.trim(),
       media_url: file_url,
-      media_type: mediaType,
+      media_type: file_url ? mediaType : null,
       likes: [],
     });
     queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -80,7 +84,7 @@ export default function NewPostForm({ currentUser }) {
           <ImagePlus className="h-4 w-4" /> Foto / Vídeo
         </Button>
         <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFile} />
-        <Button type="submit" size="sm" disabled={!file || uploading} className="rounded-full px-6">
+        <Button type="submit" size="sm" disabled={(!file && !caption.trim()) || uploading} className="rounded-full px-6">
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publicar"}
         </Button>
       </div>

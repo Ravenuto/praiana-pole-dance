@@ -1,0 +1,36 @@
+{
+  "name": "Poll",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string",
+      "description": "Pergunta da enquete"
+    },
+    "options": {
+      "type": "array",
+      "description": "Op\u00e7\u00f5es da enquete",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "votes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "question",
+    "options"
+  ]
+}
