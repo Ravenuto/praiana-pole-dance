@@ -32,14 +32,17 @@ export default function NewPostForm({ currentUser }) {
       const result = await base44.integrations.Core.UploadFile({ file });
       file_url = result.file_url;
     }
-    await base44.entities.Post.create({
+    const postData = {
       author_name: currentUser?.full_name || currentUser?.email,
       author_email: currentUser?.email,
       caption: caption.trim(),
-      media_url: file_url,
-      media_type: file_url ? mediaType : null,
       likes: [],
-    });
+    };
+    if (file_url) {
+      postData.media_url = file_url;
+      postData.media_type = mediaType;
+    }
+    await base44.entities.Post.create(postData);
     queryClient.invalidateQueries({ queryKey: ["posts"] });
     setCaption("");
     setFile(null);
