@@ -4,15 +4,14 @@
   "properties": {
     "role": {
       "type": "string",
-      "description": "The role of the user in the app",
       "enum": [
         "admin",
         "user"
-      ]
+      ],
+      "default": "user"
     },
     "plan": {
       "type": "string",
-      "description": "Plano da aluna",
       "enum": [
         "4_aulas",
         "8_aulas",
@@ -23,24 +22,35 @@
     },
     "credits": {
       "type": "number",
-      "description": "Cr\u00e9ditos de aula dispon\u00edveis",
-      "default": 0
+      "default": 4,
+      "description": "Cr\u00e9ditos de aulas dispon\u00edveis"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a aluna est\u00e1 ativa no est\u00fadio"
+    },
+    "plan_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de in\u00edcio do plano atual"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone / WhatsApp da aluna"
     },
     "birth_date": {
       "type": "string",
       "format": "date",
       "description": "Data de nascimento"
     },
-    "phone": {
+    "notes": {
       "type": "string",
-      "description": "Telefone"
+      "description": "Observa\u00e7\u00f5es sobre a aluna"
     },
-    "profile_image_url": {
+    "avatar_url": {
       "type": "string",
       "description": "URL da foto de perfil"
     }
-  },
-  "required": [
-    "role"
-  ]
+  }
 }

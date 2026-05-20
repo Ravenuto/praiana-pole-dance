@@ -1,0 +1,55 @@
+{
+  "name": "StudioPlan",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Chave do plano (ex: 4_aulas)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Nome exibido do plano"
+    },
+    "price": {
+      "type": "string",
+      "description": "Pre\u00e7o exibido (ex: R$ 230)"
+    },
+    "price_value": {
+      "type": "number",
+      "description": "Valor num\u00e9rico do pre\u00e7o"
+    },
+    "per_class": {
+      "type": "string",
+      "description": "Pre\u00e7o por aula exibido"
+    },
+    "credits": {
+      "type": "number",
+      "description": "Quantidade de cr\u00e9ditos/aulas do plano"
+    },
+    "highlight": {
+      "type": "boolean",
+      "default": false,
+      "description": "Destaque como mais popular"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "benefits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de benef\u00edcios"
+    },
+    "whatsapp_number": {
+      "type": "string",
+      "description": "N\u00famero WhatsApp para contato"
+    }
+  },
+  "required": [
+    "key",
+    "label",
+    "price"
+  ]
+}

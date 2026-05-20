@@ -6,7 +6,7 @@ import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck } from 
 import ManageClassTypes from "@/components/admin/ManageClassTypes";
 import ManageSessions from "@/components/admin/ManageSessions";
 import ManageBookings from "@/components/admin/ManageBookings";
-import ManagePlans from "@/components/admin/ManagePlans";
+import ManagePlansAdmin from "@/components/admin/ManagePlansAdmin";
 import ManageStudents from "@/components/admin/ManageStudents";
 import AttendanceBySchedule from "@/components/admin/AttendanceBySchedule";
 
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           <ManageBookings />
         </TabsContent>
         <TabsContent value="plans">
-          <ManagePlans />
+          <ManagePlansAdmin />
         </TabsContent>
         <TabsContent value="students">
           <ManageStudents />
