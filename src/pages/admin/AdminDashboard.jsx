@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Calendar, Users, CreditCard } from "lucide-react";
+import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck } from "lucide-react";
 import ManageClassTypes from "@/components/admin/ManageClassTypes";
 import ManageSessions from "@/components/admin/ManageSessions";
 import ManageBookings from "@/components/admin/ManageBookings";
 import ManagePlans from "@/components/admin/ManagePlans";
+import ManageStudents from "@/components/admin/ManageStudents";
+import AttendanceBySchedule from "@/components/admin/AttendanceBySchedule";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -36,6 +38,12 @@ export default function AdminDashboard() {
           <TabsTrigger value="plans" className="gap-2">
             <CreditCard className="h-4 w-4" /> Planos
           </TabsTrigger>
+          <TabsTrigger value="students" className="gap-2">
+            <UserPlus className="h-4 w-4" /> Alunas
+          </TabsTrigger>
+          <TabsTrigger value="attendance" className="gap-2">
+            <ClipboardCheck className="h-4 w-4" /> Presenças
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="sessions">
@@ -49,6 +57,12 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="plans">
           <ManagePlans />
+        </TabsContent>
+        <TabsContent value="students">
+          <ManageStudents />
+        </TabsContent>
+        <TabsContent value="attendance">
+          <AttendanceBySchedule />
         </TabsContent>
       </Tabs>
     </div>

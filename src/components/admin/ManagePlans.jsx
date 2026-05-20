@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 
-const planLabels = {
-  "1x_semana": "1× por semana (4 aulas/mês)",
-  "2x_semana": "2× por semana (8 aulas/mês)",
+const planInfo = {
+  "4_aulas": { label: "4 aulas/mês — R$230", color: "bg-blue-100 text-blue-700" },
+  "8_aulas": { label: "8 aulas/mês — R$370", color: "bg-purple-100 text-purple-700" },
+  "12_aulas": { label: "12 aulas/mês — R$480", color: "bg-pink-100 text-pink-700" },
+  "avulsa": { label: "Avulsa — R$70/aula", color: "bg-amber-100 text-amber-700" },
 };
 
 export default function ManagePlans() {
@@ -30,12 +32,12 @@ export default function ManagePlans() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <Users className="h-5 w-5 text-primary" />
         <h2 className="font-heading text-xl font-semibold">Planos das Alunas</h2>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">
-        Defina quantas aulas por semana cada aluna tem no plano dela.
+      <p className="text-sm text-muted-foreground mb-5">
+        Defina o plano de cada aluna. Os créditos são gerenciados na aba Alunas.
       </p>
 
       {isLoading ? (
@@ -44,26 +46,30 @@ export default function ManagePlans() {
         <p className="text-center text-muted-foreground py-12">Nenhuma aluna cadastrada</p>
       ) : (
         <div className="space-y-3">
-          {students.map((student) => (
-            <div key={student.id} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4">
-              <div>
-                <p className="font-medium text-sm">{student.full_name || student.email}</p>
-                <p className="text-xs text-muted-foreground">{student.email}</p>
+          {students.map((student) => {
+            const plan = student.plan || "4_aulas";
+            const info = planInfo[plan] || planInfo["4_aulas"];
+            return (
+              <div key={student.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{student.full_name || "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{student.email}</p>
+                  <Badge className={`mt-1 border-0 text-xs ${info.color}`}>{info.label}</Badge>
+                </div>
+                <Select value={plan} onValueChange={(val) => handlePlanChange(student.id, val)}>
+                  <SelectTrigger className="w-44 shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
+                    <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
+                    <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
+                    <SelectItem value="avulsa">Avulsa</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select
-                value={student.plan || "1x_semana"}
-                onValueChange={(val) => handlePlanChange(student.id, val)}
-              >
-                <SelectTrigger className="w-52">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1x_semana">1× por semana (4/mês)</SelectItem>
-                  <SelectItem value="2x_semana">2× por semana (8/mês)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

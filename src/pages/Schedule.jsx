@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, addDays, startOfWeek } from "date-fns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
@@ -23,8 +23,7 @@ function getDateForDay(dayKey) {
   const targetDay = dayMap[dayKey];
   let diff = targetDay - todayDay;
   if (diff < 0) diff += 7;
-  const date = addDays(today, diff);
-  return format(date, "yyyy-MM-dd");
+  return format(addDays(today, diff), "yyyy-MM-dd");
 }
 
 export default function Schedule() {
@@ -47,34 +46,39 @@ export default function Schedule() {
 
   const { data: myBookings = [] } = useQuery({
     queryKey: ["myBookings", selectedDate, user?.email],
-    queryFn: () =>
-      base44.entities.Booking.filter({
-        session_date: selectedDate,
-        student_email: user?.email,
-        status: "confirmada",
-      }),
+    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, student_email: user?.email, status: "confirmada" }),
     enabled: !!user?.email,
   });
 
-  const sortedSessions = useMemo(() => {
-    return [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
-  }, [sessions]);
+  const { data: myWaitlist = [] } = useQuery({
+    queryKey: ["myWaitlist", selectedDate, user?.email],
+    queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate, student_email: user?.email }),
+    enabled: !!user?.email,
+  });
 
+  const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
   const bookingCountMap = useMemo(() => {
     const map = {};
-    bookings.forEach((b) => {
-      map[b.session_id] = (map[b.session_id] || 0) + 1;
-    });
+    bookings.forEach((b) => { map[b.session_id] = (map[b.session_id] || 0) + 1; });
     return map;
   }, [bookings]);
-
   const myBookingMap = useMemo(() => {
     const map = {};
-    myBookings.forEach((b) => {
-      map[b.session_id] = b;
-    });
+    myBookings.forEach((b) => { map[b.session_id] = b; });
     return map;
   }, [myBookings]);
+  const myWaitlistMap = useMemo(() => {
+    const map = {};
+    myWaitlist.forEach((w) => { map[w.session_id] = w; });
+    return map;
+  }, [myWaitlist]);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    queryClient.invalidateQueries({ queryKey: ["myWaitlist"] });
+    queryClient.invalidateQueries({ queryKey: ["creditBookings"] });
+  };
 
   const handleBook = async (session) => {
     setLoadingSession(session.id);
@@ -88,10 +92,9 @@ export default function Schedule() {
         student_email: user?.email,
         status: "confirmada",
       });
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
-      toast.success("Aula reservada com sucesso!");
-    } catch (e) {
+      invalidate();
+      toast.success("Aula reservada!");
+    } catch {
       toast.error("Erro ao reservar aula");
     }
     setLoadingSession(null);
@@ -103,11 +106,46 @@ export default function Schedule() {
     setLoadingSession(session.id);
     try {
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+      invalidate();
       toast.success("Reserva cancelada");
-    } catch (e) {
-      toast.error("Erro ao cancelar reserva");
+    } catch {
+      toast.error("Erro ao cancelar");
+    }
+    setLoadingSession(null);
+  };
+
+  const handleJoinWaitlist = async (session) => {
+    setLoadingSession(session.id);
+    try {
+      // conta quantas já estão na fila para essa sessão
+      const allWaiting = await base44.entities.WaitlistEntry.filter({ session_id: session.id, session_date: selectedDate });
+      await base44.entities.WaitlistEntry.create({
+        session_id: session.id,
+        session_date: selectedDate,
+        session_time: session.time,
+        class_type_name: session.class_type_name,
+        student_name: user?.full_name || "",
+        student_email: user?.email,
+        position: allWaiting.length + 1,
+      });
+      invalidate();
+      toast.success("Você entrou na fila de espera!");
+    } catch {
+      toast.error("Erro ao entrar na fila");
+    }
+    setLoadingSession(null);
+  };
+
+  const handleLeaveWaitlist = async (session) => {
+    const entry = myWaitlistMap[session.id];
+    if (!entry) return;
+    setLoadingSession(session.id);
+    try {
+      await base44.entities.WaitlistEntry.delete(entry.id);
+      invalidate();
+      toast.success("Você saiu da fila de espera");
+    } catch {
+      toast.error("Erro ao sair da fila");
     }
     setLoadingSession(null);
   };
@@ -115,42 +153,41 @@ export default function Schedule() {
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "d 'de' MMMM", { locale: ptBR });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 font-body">
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold">Agendar Aula</h1>
-        <p className="mt-2 text-muted-foreground">Selecione o dia e reserve sua vaga</p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 font-body">
+      <div className="mb-6">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold">Agendar Aula</h1>
+        <p className="mt-1 text-muted-foreground text-sm">Selecione o dia e reserve sua vaga</p>
       </div>
 
       <CreditBanner />
       <DaySelector selected={selectedDay} onChange={setSelectedDay} />
 
-      <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="mt-3 mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <CalendarDays className="h-4 w-4" />
         <span className="capitalize">{formattedDate}</span>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="space-y-3">
         {loadingSessions || loadingBookings ? (
-          Array(3)
-            .fill(0)
-            .map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))
+          Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : sortedSessions.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium">Nenhuma aula neste dia</p>
-            <p className="text-sm mt-1">Selecione outro dia para ver as aulas disponíveis</p>
+            <CalendarDays className="h-10 w-10 mx-auto mb-4 opacity-30" />
+            <p className="font-medium">Nenhuma aula neste dia</p>
           </div>
         ) : (
           sortedSessions.map((session) => (
             <SessionCard
               key={session.id}
               session={session}
+              sessionDate={selectedDate}
               bookingCount={bookingCountMap[session.id] || 0}
               isBooked={!!myBookingMap[session.id]}
+              waitlistPosition={myWaitlistMap[session.id]?.position ?? null}
               onBook={() => handleBook(session)}
               onCancel={() => handleCancel(session)}
+              onJoinWaitlist={() => handleJoinWaitlist(session)}
+              onLeaveWaitlist={() => handleLeaveWaitlist(session)}
               isLoading={loadingSession === session.id}
             />
           ))

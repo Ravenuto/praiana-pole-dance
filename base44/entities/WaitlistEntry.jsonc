@@ -1,0 +1,40 @@
+{
+  "name": "WaitlistEntry",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "ID da sess\u00e3o de aula"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da aula"
+    },
+    "session_time": {
+      "type": "string",
+      "description": "Hor\u00e1rio da aula"
+    },
+    "class_type_name": {
+      "type": "string",
+      "description": "Nome da modalidade"
+    },
+    "student_name": {
+      "type": "string",
+      "description": "Nome da aluna"
+    },
+    "student_email": {
+      "type": "string",
+      "description": "Email da aluna"
+    },
+    "position": {
+      "type": "number",
+      "description": "Posi\u00e7\u00e3o na fila"
+    }
+  },
+  "required": [
+    "session_id",
+    "session_date",
+    "student_email"
+  ]
+}
