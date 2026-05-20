@@ -58,10 +58,13 @@ export default function Profile() {
       ),
   });
 
+  const planMaxCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
+
   const currentUser = userData || user;
   const plan = currentUser?.plan || "4_aulas";
   const planData = planInfo[plan] || planInfo["4_aulas"];
-  const credits = currentUser?.credits || 0;
+  const credits = currentUser?.credits ?? 0;
+  const maxCredits = planMaxCredits[plan] || 4;
   const usedThisMonth = monthBookings.length;
 
   React.useEffect(() => {
@@ -159,7 +162,13 @@ export default function Profile() {
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="text-xs text-muted-foreground mb-1">Créditos disponíveis</p>
           <p className="font-heading text-2xl font-bold text-primary">{credits}</p>
-          <p className="text-xs text-muted-foreground">aulas</p>
+          <p className="text-xs text-muted-foreground">de {maxCredits} aulas</p>
+          <div className="mt-2 w-full bg-muted rounded-full h-1.5">
+            <div
+              className="bg-primary h-1.5 rounded-full transition-all"
+              style={{ width: `${Math.max(0, Math.min(100, (credits / maxCredits) * 100))}%` }}
+            />
+          </div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 text-center col-span-2">
           <p className="text-xs text-muted-foreground mb-1">Aulas realizadas este mês</p>

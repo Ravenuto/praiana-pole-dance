@@ -41,7 +41,12 @@ export default function Schedule() {
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
     queryKey: ["bookings", selectedDate],
-    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }),
+    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100),
+  });
+
+  const { data: allWaitlist = [] } = useQuery({
+    queryKey: ["allWaitlist", selectedDate],
+    queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate }, "position", 100),
   });
 
   const { data: myBookings = [] } = useQuery({
@@ -62,6 +67,22 @@ export default function Schedule() {
     bookings.forEach((b) => { map[b.session_id] = (map[b.session_id] || 0) + 1; });
     return map;
   }, [bookings]);
+  const bookingsBySession = useMemo(() => {
+    const map = {};
+    bookings.forEach((b) => {
+      if (!map[b.session_id]) map[b.session_id] = [];
+      map[b.session_id].push(b);
+    });
+    return map;
+  }, [bookings]);
+  const waitlistBySession = useMemo(() => {
+    const map = {};
+    allWaitlist.forEach((w) => {
+      if (!map[w.session_id]) map[w.session_id] = [];
+      map[w.session_id].push(w);
+    });
+    return map;
+  }, [allWaitlist]);
   const myBookingMap = useMemo(() => {
     const map = {};
     myBookings.forEach((b) => { map[b.session_id] = b; });
@@ -77,12 +98,17 @@ export default function Schedule() {
     queryClient.invalidateQueries({ queryKey: ["bookings"] });
     queryClient.invalidateQueries({ queryKey: ["myBookings"] });
     queryClient.invalidateQueries({ queryKey: ["myWaitlist"] });
+    queryClient.invalidateQueries({ queryKey: ["allWaitlist"] });
     queryClient.invalidateQueries({ queryKey: ["creditBookings"] });
+    queryClient.invalidateQueries({ queryKey: ["myProfile"] });
   };
 
   const handleBook = async (session) => {
     setLoadingSession(session.id);
     try {
+      // Busca dados atuais do usuário para decrementar créditos
+      const [userData] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      const currentCredits = userData?.credits || 0;
       await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
@@ -92,6 +118,9 @@ export default function Schedule() {
         student_email: user?.email,
         status: "confirmada",
       });
+      if (userData?.id && currentCredits > 0) {
+        await base44.entities.User.update(userData.id, { credits: currentCredits - 1 });
+      }
       invalidate();
       toast.success("Aula reservada!");
     } catch {
@@ -105,7 +134,12 @@ export default function Schedule() {
     if (!booking) return;
     setLoadingSession(session.id);
     try {
+      const [userData] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      const currentCredits = userData?.credits || 0;
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
+      if (userData?.id) {
+        await base44.entities.User.update(userData.id, { credits: currentCredits + 1 });
+      }
       invalidate();
       toast.success("Reserva cancelada");
     } catch {
@@ -182,6 +216,8 @@ export default function Schedule() {
               session={session}
               sessionDate={selectedDate}
               bookingCount={bookingCountMap[session.id] || 0}
+              sessionBookings={bookingsBySession[session.id] || []}
+              sessionWaitlist={waitlistBySession[session.id] || []}
               isBooked={!!myBookingMap[session.id]}
               waitlistPosition={myWaitlistMap[session.id]?.position ?? null}
               onBook={() => handleBook(session)}

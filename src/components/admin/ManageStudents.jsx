@@ -46,10 +46,12 @@ export default function ManageStudents() {
     setInviting(false);
   };
 
+  const planCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
+
   const handlePlanChange = async (userId, plan) => {
-    await base44.entities.User.update(userId, { plan });
+    await base44.entities.User.update(userId, { plan, credits: planCredits[plan] || 4 });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    toast.success("Plano atualizado!");
+    toast.success("Plano atualizado! Créditos resetados para " + planCredits[plan]);
   };
 
   const handleSaveCredits = async () => {
