@@ -24,6 +24,13 @@
         "red"
       ],
       "default": "blue"
+    },
+    "likes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de emails que curtiram"
     }
   },
   "required": [

@@ -151,19 +151,17 @@ export default function AttendanceBySchedule() {
 
                 {isExpanded && (
                   <div className="border-t border-border">
-                    {/* Botões de chamada em lote — dentro da aba expandida */}
-                    {sessionBookings.length > 0 && (
-                      <div className="flex gap-2 px-4 py-2 bg-muted/20 border-b border-border">
-                        <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-green-700 border-green-300"
-                          onClick={() => handleMarkAll(session.id, "presente")}>
-                          <Check className="h-3 w-3" /> Todas presentes
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-destructive border-destructive/30"
-                          onClick={() => handleMarkAll(session.id, "faltou")}>
-                          <X className="h-3 w-3" /> Todas faltaram
-                        </Button>
-                      </div>
-                    )}
+                    {/* Botões de chamada em lote — sempre visíveis */}
+                    <div className="flex gap-2 px-4 py-2 bg-muted/20 border-b border-border">
+                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-green-700 border-green-300"
+                        onClick={() => handleMarkAll(session.id, "presente")}>
+                        <Check className="h-3 w-3" /> Todas presentes
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-destructive border-destructive/30"
+                        onClick={() => handleMarkAll(session.id, "faltou")}>
+                        <X className="h-3 w-3" /> Todas faltaram
+                      </Button>
+                    </div>
                     {sessionBookings.length === 0 ? (
                       <p className="text-center text-muted-foreground text-sm py-6">Nenhuma reserva</p>
                     ) : (
