@@ -13,20 +13,19 @@ const DAYS = [
 
 export default function DaySelector({ selected, onChange }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
+    <div className="grid grid-cols-7 gap-1 sm:flex sm:gap-2 sm:overflow-x-auto sm:pb-2">
       {DAYS.map((day) => (
-        <Button
+        <button
           key={day.key}
-          variant={selected === day.key ? "default" : "outline"}
-          size="sm"
           onClick={() => onChange(day.key)}
-          className={`rounded-full px-4 font-body text-sm whitespace-nowrap ${
-            selected === day.key ? "" : "hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+          className={`flex flex-col items-center justify-center rounded-xl py-2 px-1 text-center transition-colors font-body ${
+            selected === day.key
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
           }`}
         >
-          <span className="sm:hidden">{day.label}</span>
-          <span className="hidden sm:inline">{day.full}</span>
-        </Button>
+          <span className="text-xs font-semibold">{day.label}</span>
+        </button>
       ))}
     </div>
   );

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Loader2, Megaphone, BarChart2 } from "lucide-react";
 import { toast } from "sonner";
@@ -40,6 +39,15 @@ export default function Notices() {
   const sortedNotices = [...notices].sort((a, b) => {
     if (b.pinned !== a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
     return new Date(b.created_date) - new Date(a.created_date);
+  });
+
+  // Mistura recados e enquetes em ordem cronológica (pinned primeiro)
+  const feedItems = [
+    ...sortedNotices.map((n) => ({ type: "notice", data: n, date: new Date(n.created_date || 0), pinned: !!n.pinned })),
+    ...polls.map((p) => ({ type: "poll", data: p, date: new Date(p.created_date || 0), pinned: false })),
+  ].sort((a, b) => {
+    if (b.pinned !== a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    return b.date - a.date;
   });
 
   const handleSave = async () => {
@@ -114,30 +122,16 @@ export default function Notices() {
                       className="min-h-[100px]"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Cor</Label>
-                      <Select value={form.color} onValueChange={(v) => setForm({ ...form, color: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="blue">Azul</SelectItem>
-                          <SelectItem value="yellow">Amarelo</SelectItem>
-                          <SelectItem value="green">Verde</SelectItem>
-                          <SelectItem value="red">Vermelho</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={form.pinned}
-                          onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
-                          className="w-4 h-4 accent-primary"
-                        />
-                        <span className="text-sm">Fixar no topo</span>
-                      </label>
-                    </div>
+                  <div className="flex items-center">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.pinned}
+                        onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <span className="text-sm">Fixar no topo</span>
+                    </label>
                   </div>
                   <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publicar Recado"}
@@ -149,39 +143,34 @@ export default function Notices() {
         )}
       </div>
 
-      {/* Enquetes — sempre no topo */}
-      {(polls.length > 0 || loadingPolls) && (
-        <div className="mb-6 space-y-4">
-          {loadingPolls
-            ? Array(1).fill(0).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
-            : polls.map((poll) => (
-                <PollCard key={poll.id} poll={poll} currentUser={user} />
-              ))}
-        </div>
-      )}
-
-      {/* Recados */}
+      {/* Feed unificado — enquetes e recados misturados por data */}
       {isEmpty ? (
         <div className="text-center py-16 text-muted-foreground">
           <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p className="text-lg font-medium">Nenhum recado ainda</p>
           {isAdmin && <p className="text-sm mt-1">Publique o primeiro recado para as alunas</p>}
         </div>
+      ) : (loadingNotices || loadingPolls) ? (
+        <div className="space-y-4">
+          {Array(3).fill(0).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
+        </div>
       ) : (
         <AnimatePresence>
           <div className="space-y-4">
-            {loadingNotices
-              ? Array(3).fill(0).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
-              : sortedNotices.map((notice) => (
-                  <NoticeCard
-                    key={notice.id}
-                    notice={notice}
-                    currentUser={user}
-                    isAdmin={isAdmin}
-                    onTogglePin={togglePin}
-                    onDelete={handleDelete}
-                  />
-                ))}
+            {feedItems.map((item) =>
+              item.type === "poll" ? (
+                <PollCard key={"poll-" + item.data.id} poll={item.data} currentUser={user} />
+              ) : (
+                <NoticeCard
+                  key={"notice-" + item.data.id}
+                  notice={item.data}
+                  currentUser={user}
+                  isAdmin={isAdmin}
+                  onTogglePin={togglePin}
+                  onDelete={handleDelete}
+                />
+              )
+            )}
           </div>
         </AnimatePresence>
       )}

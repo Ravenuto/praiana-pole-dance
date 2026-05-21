@@ -41,7 +41,7 @@ export default function Navbar() {
             <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/c2269a69d_Logo_PRAIANA.png"
 
             alt="Praiana"
-            className="w-7 h-7 object-contain rounded bg-white p-0.5" />
+            className="w-7 h-7 object-contain dark:bg-white dark:rounded dark:p-0.5 opacity-80 dark:opacity-100" />
             
             <span className="font-heading text-base font-semibold tracking-tight">Praiana</span>
           </Link>

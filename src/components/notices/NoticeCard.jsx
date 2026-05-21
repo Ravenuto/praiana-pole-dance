@@ -10,12 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-const colorMap = {
-  blue:   { bg: "bg-primary/10",  border: "border-primary/30",  text: "text-primary",          badge: "bg-primary/15 text-primary" },
-  yellow: { bg: "bg-accent/10",   border: "border-accent/30",   text: "text-accent-foreground", badge: "bg-accent/15 text-accent-foreground" },
-  green:  { bg: "bg-green-50 dark:bg-green-900/20",  border: "border-green-200", text: "text-green-800 dark:text-green-300", badge: "bg-green-100 text-green-700" },
-  red:    { bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200",   text: "text-red-800 dark:text-red-300",   badge: "bg-red-100 text-red-700" },
-};
+const noticeStyle = { bg: "bg-primary/10", border: "border-primary/30", text: "text-primary", badge: "bg-primary/15 text-primary" };
 
 export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, onDelete }) {
   const queryClient = useQueryClient();
@@ -23,7 +18,7 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
   const [commentText, setCommentText] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
 
-  const c = colorMap[notice.color] || colorMap.blue;
+  const c = noticeStyle;
   const timeAgo = notice.created_date
     ? formatDistanceToNow(new Date(notice.created_date), { addSuffix: true, locale: ptBR })
     : "";
