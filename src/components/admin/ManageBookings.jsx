@@ -48,11 +48,16 @@ export default function ManageBookings() {
     enabled: !!dateFrom && !!dateTo,
   });
 
-  // Modalidades únicas para o filtro
+  // Busca todas as modalidades cadastradas
+  const { data: classTypes = [] } = useQuery({
+    queryKey: ["classTypes"],
+    queryFn: () => base44.entities.ClassType.filter({ is_active: true }),
+  });
+
+  // Modalidades únicas para o filtro — sempre todas as cadastradas
   const modalities = useMemo(() => {
-    const set = new Set(bookings.map((b) => b.class_type_name).filter(Boolean));
-    return Array.from(set).sort();
-  }, [bookings]);
+    return classTypes.map((ct) => ct.name).sort();
+  }, [classTypes]);
 
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
