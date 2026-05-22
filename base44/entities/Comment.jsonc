@@ -14,9 +14,20 @@
       "type": "string",
       "description": "Email da autora"
     },
+    "author_avatar": {
+      "type": "string",
+      "description": "URL da foto de perfil da autora"
+    },
     "text": {
       "type": "string",
       "description": "Texto do coment\u00e1rio"
+    },
+    "likes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de emails que curtiram o coment\u00e1rio"
     }
   },
   "required": [

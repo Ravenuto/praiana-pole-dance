@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import CommentItem from "@/components/shared/CommentItem";
 
 const noticeStyle = { bg: "bg-primary/10", border: "border-primary/30", text: "text-primary", badge: "bg-primary/15 text-primary" };
 
@@ -48,6 +49,7 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
       post_id: notice.id,
       author_name: currentUser?.full_name || currentUser?.email,
       author_email: currentUser?.email,
+      author_avatar: currentUser?.avatar_url || null,
       text: commentText.trim(),
     });
     setCommentText("");
@@ -114,12 +116,15 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
       {showComments && (
         <div className="mt-3">
           {comments.length > 0 && (
-            <div className="space-y-2 mb-3">
+            <div className="space-y-3 mb-3">
               {comments.map((c) => (
-                <div key={c.id} className="flex gap-2 text-sm">
-                  <span className="font-semibold shrink-0">{c.author_name?.split(" ")[0] || "Aluna"}:</span>
-                  <span className="text-foreground/80">{c.text}</span>
-                </div>
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  currentUser={currentUser}
+                  isAdmin={isAdmin}
+                  queryKey={["comments", notice.id]}
+                />
               ))}
             </div>
           )}

@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, Trash2 } from "lucide-react"; // Trash2 ainda usado no header
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import CommentItem from "@/components/shared/CommentItem";
 
 export default function PostCard({ post, currentUser, onDelete }) {
   const queryClient = useQueryClient();
@@ -41,16 +42,12 @@ export default function PostCard({ post, currentUser, onDelete }) {
       post_id: post.id,
       author_name: currentUser?.full_name || currentUser?.email,
       author_email: currentUser?.email,
+      author_avatar: currentUser?.avatar_url || null,
       text: commentText.trim(),
     });
     setCommentText("");
     queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
     setSubmitting(false);
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    await base44.entities.Comment.delete(commentId);
-    queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
   };
 
   const timeAgo = post.created_date
@@ -121,20 +118,13 @@ export default function PostCard({ post, currentUser, onDelete }) {
         <div className="px-4 pb-3">
           <div className="space-y-2 mt-2 max-h-40 overflow-y-auto">
             {comments.map((c) => (
-              <div key={c.id} className="flex items-start justify-between gap-2 group">
-                <p className="text-sm">
-                  <span className="font-semibold mr-1">{c.author_name || c.author_email}</span>
-                  {c.text}
-                </p>
-                {(c.author_email === currentUser?.email || isAdmin) && (
-                  <button
-                    onClick={() => handleDeleteComment(c.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
+              <CommentItem
+                key={c.id}
+                comment={c}
+                currentUser={currentUser}
+                isAdmin={isAdmin}
+                queryKey={["comments", post.id]}
+              />
             ))}
           </div>
           <form onSubmit={handleComment} className="flex gap-2 mt-3">
