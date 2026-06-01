@@ -113,7 +113,10 @@ export default function SessionCard({
                 </Button>
               )
             ) : !hasCredits ? (
-              <span className="text-xs text-red-500 font-medium text-center">Sem créditos</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs text-destructive font-semibold bg-destructive/10 px-3 py-1 rounded-full">Sem créditos 😢</span>
+                <a href="/planos" className="text-xs text-primary underline underline-offset-2">Ver planos</a>
+              </div>
             ) : (
               <Button
                 size="sm"

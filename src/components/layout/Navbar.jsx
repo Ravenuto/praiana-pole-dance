@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { base44 } from "@/api/base44Client";
+import { useUnreadCount } from "@/hooks/useNotifications";
 import {
   Menu, X, LogOut, Sun, Moon,
-  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck } from
+  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell } from
 "lucide-react";
 
 const NAV_LINKS = [
@@ -16,6 +17,7 @@ const NAV_LINKS = [
 { to: "/recados", label: "Recados", icon: Megaphone },
 { to: "/feed", label: "Feed", icon: ImageIcon },
 { to: "/planos", label: "Planos", icon: CreditCard },
+{ to: "/notificacoes", label: "Notif.", icon: Bell },
 { to: "/perfil", label: "Perfil", icon: User }];
 
 
@@ -27,6 +29,7 @@ export default function Navbar() {
   const { theme, toggle } = useTheme();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
+  const unreadCount = useUnreadCount(user?.email);
 
   const links = isAdmin ? [...NAV_LINKS, ADMIN_LINK] : NAV_LINKS;
   const isActive = (path) => location.pathname === path;
@@ -48,19 +51,25 @@ export default function Navbar() {
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-0.5">
-            {links.map((link) =>
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-              isActive(link.to) ?
-              "bg-primary/10 text-primary" :
-              "text-muted-foreground hover:text-foreground hover:bg-muted"}`
-              }>
-              
-                {link.label}
-              </Link>
-            )}
+            {links.map((link) => {
+              const isNotif = link.to === "/notificacoes";
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`relative px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {link.label}
+                  {isNotif && unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Desktop actions */}
@@ -95,21 +104,26 @@ export default function Navbar() {
               const Icon = link.icon;
               const active = isActive(link.to);
               const adminLink = link.to === "/admin";
+              const isNotif = link.to === "/notificacoes";
               return (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex flex-col items-center justify-center gap-1 px-1 py-2.5 rounded-xl text-center transition-colors ${
+                  className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 rounded-xl text-center transition-colors ${
                   active ?
                   "bg-primary/10 text-primary" :
                   adminLink ?
                   "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100" :
                   "text-muted-foreground hover:text-foreground hover:bg-muted"}`
                   }>
-                  
                     <Icon className="h-5 w-5" />
                     <span className="text-[10px] font-medium leading-tight">{link.label}</span>
+                    {isNotif && unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
                   </Link>);
 
             })}

@@ -23,10 +23,15 @@ const planInfo = {
 
 const planCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
 
+const EMPTY_MANUAL = { name: "", email: "", phone: "", birth_date: "", plan: "4_aulas", credits: 4 };
+
 export default function ManageStudents() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [manualDialog, setManualDialog] = useState(false);
+  const [manualForm, setManualForm] = useState(EMPTY_MANUAL);
+  const [savingManual, setSavingManual] = useState(false);
   const [creditDialog, setCreditDialog] = useState(null);
   const [creditValue, setCreditValue] = useState(0);
   const [savingCredit, setSavingCredit] = useState(false);
@@ -67,6 +72,35 @@ export default function ManageStudents() {
       toast.error("Erro ao enviar convite");
     }
     setInviting(false);
+  };
+
+  const handleSaveManual = async () => {
+    if (!manualForm.name || !manualForm.email) return toast.error("Nome e email são obrigatórios");
+    if (!manualForm.email.includes("@")) return toast.error("Email inválido");
+    setSavingManual(true);
+    try {
+      // Convida a aluna para criar a conta e já salva os dados extras no perfil
+      await base44.users.inviteUser(manualForm.email, "user");
+      // Aguarda um pouco para o user ser criado, então busca e atualiza
+      await new Promise(r => setTimeout(r, 1500));
+      const users = await base44.entities.User.filter({ email: manualForm.email });
+      if (users[0]) {
+        await base44.entities.User.update(users[0].id, {
+          phone: manualForm.phone,
+          birth_date: manualForm.birth_date,
+          plan: manualForm.plan,
+          credits: manualForm.credits,
+          plan_start_date: format(new Date(), "yyyy-MM-dd"),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+      toast.success(`Aluna ${manualForm.name} cadastrada! Um convite foi enviado para ${manualForm.email}`);
+      setManualDialog(false);
+      setManualForm(EMPTY_MANUAL);
+    } catch {
+      toast.error("Erro ao cadastrar. Verifique se o email já está cadastrado.");
+    }
+    setSavingManual(false);
   };
 
   const handlePlanChange = async (userId, plan) => {
@@ -114,26 +148,31 @@ export default function ManageStudents() {
 
   return (
     <div>
-      {/* Convidar */}
+      {/* Cadastrar */}
       <div className="mb-6 p-4 rounded-xl border border-border bg-card">
         <h3 className="font-medium mb-3 flex items-center gap-2">
           <UserPlus className="h-4 w-4 text-primary" /> Cadastrar nova aluna
         </h3>
-        <div className="flex gap-2">
-          <Input
-            type="email"
-            placeholder="email@exemplo.com"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-            className="flex-1"
-          />
-          <Button onClick={handleInvite} disabled={inviting} className="gap-2 shrink-0">
-            {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> Convidar</>}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={() => setManualDialog(true)} className="gap-2 flex-1">
+            <UserPlus className="h-4 w-4" /> Cadastro completo
           </Button>
+          <div className="flex gap-2 flex-1">
+            <Input
+              type="email"
+              placeholder="email@exemplo.com (rápido)"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="flex-1"
+            />
+            <Button onClick={handleInvite} disabled={inviting} variant="outline" className="gap-2 shrink-0">
+              {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          A aluna receberá um email de convite para criar a conta.
+          "Cadastro completo" preenche todos os dados e já define o plano.
         </p>
       </div>
 
@@ -292,6 +331,64 @@ export default function ManageStudents() {
             );
           })}
         </div>
+      )}
+
+      {/* Dialog cadastro manual */}
+      {manualDialog && (
+        <Dialog open={manualDialog} onOpenChange={() => { setManualDialog(false); setManualForm(EMPTY_MANUAL); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="font-heading">Cadastrar Aluna</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-xs mb-1 block">Nome completo *</Label>
+                <Input value={manualForm.name} onChange={(e) => setManualForm((f) => ({ ...f, name: e.target.value }))} className="h-8 text-sm" placeholder="Nome da aluna" />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Email *</Label>
+                <Input type="email" value={manualForm.email} onChange={(e) => setManualForm((f) => ({ ...f, email: e.target.value }))} className="h-8 text-sm" placeholder="email@exemplo.com" />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Telefone / WhatsApp</Label>
+                <Input value={manualForm.phone} onChange={(e) => setManualForm((f) => ({ ...f, phone: e.target.value }))} className="h-8 text-sm" placeholder="(99) 99999-9999" />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Data de nascimento</Label>
+                <Input type="date" value={manualForm.birth_date} onChange={(e) => setManualForm((f) => ({ ...f, birth_date: e.target.value }))} className="h-8 text-sm" />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Plano inicial</Label>
+                <Select value={manualForm.plan} onValueChange={(v) => setManualForm((f) => ({ ...f, plan: v, credits: planCredits[v] || 4 }))}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
+                    <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
+                    <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
+                    <SelectItem value="avulsa">Avulsa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Créditos iniciais</Label>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setManualForm((f) => ({ ...f, credits: Math.max(0, f.credits - 1) }))}>
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="text-lg font-bold w-8 text-center">{manualForm.credits}</span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setManualForm((f) => ({ ...f, credits: f.credits + 1 }))}>
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <Button onClick={handleSaveManual} disabled={savingManual} className="w-full rounded-full">
+                {savingManual ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cadastrar e enviar convite"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Dialog créditos */}

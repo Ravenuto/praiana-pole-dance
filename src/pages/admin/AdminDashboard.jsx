@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck } from "lucide-react";
 import ManageClassTypes from "@/components/admin/ManageClassTypes";
 import ManageSessions from "@/components/admin/ManageSessions";
-import ManageBookings from "@/components/admin/ManageBookings";
+import ManageBookings from "@/components/admin/ManageBookingsMobile";
 import ManagePlansAdmin from "@/components/admin/ManagePlansAdmin";
 import ManageStudents from "@/components/admin/ManageStudents";
 import AttendanceBySchedule from "@/components/admin/AttendanceBySchedule";

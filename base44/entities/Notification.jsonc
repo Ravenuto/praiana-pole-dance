@@ -1,0 +1,49 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email do destinat\u00e1rio"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "new_post",
+        "new_notice",
+        "schedule_change",
+        "credits_added",
+        "like",
+        "comment",
+        "booking_made",
+        "booking_cancelled"
+      ],
+      "description": "Tipo de notifica\u00e7\u00e3o"
+    },
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo da notifica\u00e7\u00e3o"
+    },
+    "message": {
+      "type": "string",
+      "description": "Mensagem da notifica\u00e7\u00e3o"
+    },
+    "link": {
+      "type": "string",
+      "description": "Caminho para navegar ao clicar"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Nome de quem gerou a notifica\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "user_email",
+    "type",
+    "title"
+  ]
+}

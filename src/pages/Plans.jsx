@@ -40,7 +40,7 @@ const plans = [
 ];
 
 function getWhatsappLink(planLabel) {
-  const msg = encodeURIComponent(`Olá! Tenho interesse no plano ${planLabel} da Praiana Pole Dance. 🌊`);
+  const msg = encodeURIComponent(`Oii, quero comprar o plano de ${planLabel} da Praiana 🏝️`);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
 }
 

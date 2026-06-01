@@ -2,14 +2,16 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, addDays } from "date-fns";
+import { format, addDays, addWeeks, startOfWeek, isSameWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
 import CreditBanner from "@/components/schedule/CreditBanner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { createNotification } from "@/hooks/useNotifications";
 
 function getTodayDayKey() {
   const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
@@ -26,13 +28,25 @@ function getDateForDay(dayKey) {
   return format(addDays(today, diff), "yyyy-MM-dd");
 }
 
+// Retorna a data (yyyy-MM-dd) de um dia específico numa semana deslocada
+function getDateForDayInWeek(dayKey, weekOffset) {
+  const dayMap = { domingo: 0, segunda: 1, terca: 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6 };
+  const base = addWeeks(new Date(), weekOffset);
+  const weekStart = startOfWeek(base, { weekStartsOn: 1 }); // semana começa na segunda
+  const dayIndex = dayMap[dayKey];
+  // Ajustar: segunda = 0 offset na semana (weekStartsOn 1)
+  const offsetFromMon = dayIndex === 0 ? 6 : dayIndex - 1;
+  return format(addDays(weekStart, offsetFromMon), "yyyy-MM-dd");
+}
+
 export default function Schedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedDay, setSelectedDay] = useState(getTodayDayKey());
+  const [weekOffset, setWeekOffset] = useState(0);
   const [loadingSession, setLoadingSession] = useState(null);
 
-  const selectedDate = useMemo(() => getDateForDay(selectedDay), [selectedDay]);
+  const selectedDate = useMemo(() => getDateForDayInWeek(selectedDay, weekOffset), [selectedDay, weekOffset]);
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ["sessions", selectedDay, selectedDate],
@@ -152,6 +166,18 @@ export default function Schedule() {
       }
       invalidate();
       toast.success("Aula reservada!");
+      // Notificar admins
+      const admins = await base44.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        createNotification({
+          user_email: admin.email,
+          type: "booking_made",
+          title: `${user?.full_name || user?.email} reservou uma aula`,
+          message: `${session.class_type_name} — ${selectedDate} às ${session.time}`,
+          link: "/admin",
+          actor_name: user?.full_name || user?.email,
+        });
+      }
     } catch {
       toast.error("Erro ao reservar aula");
     }
@@ -171,6 +197,18 @@ export default function Schedule() {
       }
       invalidate();
       toast.success("Reserva cancelada");
+      // Notificar admins
+      const admins = await base44.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        createNotification({
+          user_email: admin.email,
+          type: "booking_cancelled",
+          title: `${user?.full_name || user?.email} cancelou uma aula`,
+          message: `${session.class_type_name} — ${selectedDate} às ${session.time}`,
+          link: "/admin",
+          actor_name: user?.full_name || user?.email,
+        });
+      }
     } catch {
       toast.error("Erro ao cancelar");
     }
@@ -223,6 +261,27 @@ export default function Schedule() {
       </div>
 
       <CreditBanner />
+
+      {/* Navegador de semana */}
+      <div className="flex items-center justify-between mb-3 p-2 rounded-xl bg-muted/40 border border-border">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o - 1)}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="text-center">
+          <p className="text-sm font-medium">
+            {weekOffset === 0 ? "Esta semana" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana passada" : `Semana ${weekOffset > 0 ? "+" : ""}${weekOffset}`}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {format(getDateForDayInWeek("segunda", weekOffset) + "T12:00:00" > "2000" ? new Date(getDateForDayInWeek("segunda", weekOffset) + "T12:00:00") : new Date(), "d MMM", { locale: ptBR })}
+            {" — "}
+            {format(new Date(getDateForDayInWeek("domingo", weekOffset) + "T12:00:00"), "d MMM", { locale: ptBR })}
+          </p>
+        </div>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o + 1)}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
       <DaySelector selected={selectedDay} onChange={setSelectedDay} />
 
       <div className="mt-3 mb-4 flex items-center gap-2 text-sm text-muted-foreground">

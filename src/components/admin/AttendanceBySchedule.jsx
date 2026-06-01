@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, X, Clock, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, Clock, Users, ChevronDown, ChevronUp, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const DAYS = [
@@ -45,6 +47,9 @@ export default function AttendanceBySchedule() {
   const [selectedDay, setSelectedDay] = useState(getTodayKey());
   const [expandedSession, setExpandedSession] = useState(null);
   const [dateOverride, setDateOverride] = useState("");
+  const [addStudentDialog, setAddStudentDialog] = useState(null); // { session }
+  const [addStudentForm, setAddStudentForm] = useState({ name: "", email: "" });
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const selectedDate = dateOverride || getDateForDay(selectedDay);
 
@@ -81,6 +86,30 @@ export default function AttendanceBySchedule() {
     await Promise.all(list.map((b) => base44.entities.Booking.update(b.id, { status })));
     queryClient.invalidateQueries({ queryKey: ["adminBookingsAtt"] });
     toast.success(`${list.length} alunas marcadas como ${status}`);
+  };
+
+  const handleAddStudent = async () => {
+    if (!addStudentForm.email || !addStudentDialog) return toast.error("Email obrigatório");
+    setAddingStudent(true);
+    try {
+      const session = addStudentDialog.session;
+      await base44.entities.Booking.create({
+        session_id: session.id,
+        session_date: selectedDate,
+        session_time: session.time,
+        class_type_name: session.class_type_name,
+        student_name: addStudentForm.name,
+        student_email: addStudentForm.email,
+        status: "confirmada",
+      });
+      queryClient.invalidateQueries({ queryKey: ["adminBookingsAtt"] });
+      toast.success("Aluna adicionada à aula!");
+      setAddStudentDialog(null);
+      setAddStudentForm({ name: "", email: "" });
+    } catch {
+      toast.error("Erro ao adicionar aluna");
+    }
+    setAddingStudent(false);
   };
 
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
@@ -152,7 +181,7 @@ export default function AttendanceBySchedule() {
                 {isExpanded && (
                   <div className="border-t border-border">
                     {/* Botões de chamada em lote — sempre visíveis */}
-                    <div className="flex gap-2 px-4 py-2 bg-muted/20 border-b border-border">
+                    <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/20 border-b border-border">
                       <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-green-700 border-green-300"
                         onClick={() => handleMarkAll(session.id, "presente")}>
                         <Check className="h-3 w-3" /> Todas presentes
@@ -160,6 +189,10 @@ export default function AttendanceBySchedule() {
                       <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-destructive border-destructive/30"
                         onClick={() => handleMarkAll(session.id, "faltou")}>
                         <X className="h-3 w-3" /> Todas faltaram
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-primary border-primary/30"
+                        onClick={() => { setAddStudentDialog({ session }); setAddStudentForm({ name: "", email: "" }); }}>
+                        <UserPlus className="h-3 w-3" /> Adicionar aluna
                       </Button>
                     </div>
                     {sessionBookings.length === 0 ? (
@@ -195,6 +228,32 @@ export default function AttendanceBySchedule() {
             );
           })}
         </div>
+      )}
+      {/* Dialog adicionar aluna na aula */}
+      {addStudentDialog && (
+        <Dialog open={!!addStudentDialog} onOpenChange={() => setAddStudentDialog(null)}>
+          <DialogContent className="max-w-xs">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-base">Adicionar Aluna na Aula</DialogTitle>
+            </DialogHeader>
+            <div className="py-1 text-xs text-muted-foreground mb-2">
+              {addStudentDialog.session.class_type_name} — {addStudentDialog.session.time} — {selectedDate}
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs mb-1 block">Nome</Label>
+                <Input value={addStudentForm.name} onChange={(e) => setAddStudentForm((f) => ({ ...f, name: e.target.value }))} className="h-8 text-sm" placeholder="Nome da aluna" />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Email *</Label>
+                <Input value={addStudentForm.email} onChange={(e) => setAddStudentForm((f) => ({ ...f, email: e.target.value }))} className="h-8 text-sm" placeholder="email@exemplo.com" />
+              </div>
+              <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full rounded-full">
+                {addingStudent ? <Loader2 className="h-4 w-4 animate-spin" /> : "Adicionar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
