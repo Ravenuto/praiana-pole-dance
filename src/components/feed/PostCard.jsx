@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import CommentItem from "@/components/shared/CommentItem";
+import MentionInput from "@/components/shared/MentionInput";
 
 export default function PostCard({ post, currentUser, onDelete }) {
   const queryClient = useQueryClient();
@@ -180,11 +181,12 @@ export default function PostCard({ post, currentUser, onDelete }) {
             ))}
           </div>
           <form onSubmit={handleComment} className="flex gap-2 mt-3">
-            <Input
+            <MentionInput
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Adicionar comentário..."
+              onChange={setCommentText}
+              placeholder="Comentar... use @ para mencionar"
               className="flex-1 h-8 text-sm"
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleComment(e)}
             />
             <Button type="submit" size="icon" variant="ghost" disabled={submitting} className="h-8 w-8">
               <Send className="h-4 w-4" />

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, addDays, startOfMonth, endOfMonth, isSameMonth, startOfWeek, endOfWeek, isSameDay, parseISO, addMonths, subMonths } from "date-fns";
+import { format, addDays, startOfMonth, endOfMonth, isSameMonth, startOfWeek, endOfWeek, isSameDay, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
@@ -27,6 +27,7 @@ export default function Schedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [weekAnchor, setWeekAnchor] = useState(new Date()); // início da semana exibida no DaySelector
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [loadingSession, setLoadingSession] = useState(null);
@@ -319,6 +320,7 @@ export default function Schedule() {
                 onClick={() => {
                   if (!allowed || !isCurrentMonth) return;
                   setSelectedDate(dateStr);
+                  setWeekAnchor(day); // ancora a semana no dia clicado
                   setCalendarOpen(false);
                 }}
                 disabled={!allowed || !isCurrentMonth}
@@ -380,17 +382,12 @@ export default function Schedule() {
         )}
       </div>
 
-      <DaySelector selected={getDayKey(new Date(selectedDate + "T12:00:00"))} onChange={(dayKey) => {
-        // Ao clicar num dia da semana, vai para esse dia na semana atual/mais próxima
-        const dayMap = { domingo: 0, segunda: 1, terca: 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6 };
-        const today = new Date();
-        const todayDay = today.getDay();
-        const targetDay = dayMap[dayKey];
-        let diff = targetDay - todayDay;
-        if (diff < 0) diff += 7;
-        const newDate = format(addDays(today, diff), "yyyy-MM-dd");
-        setSelectedDate(newDate);
-      }} />
+      <DaySelector
+        selectedDate={selectedDate}
+        onSelectDate={(dateStr) => setSelectedDate(dateStr)}
+        weekAnchor={weekAnchor}
+        onWeekChange={(newAnchor) => setWeekAnchor(newAnchor)}
+      />
 
       <div className="space-y-3 mt-4">
         {loadingSessions || loadingBookings ? (

@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Pin, PinOff, Trash2, Heart, MessageCircle, Send, Loader2 } from "lucide-react";
+// Input removido, usando MentionInput
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import CommentItem from "@/components/shared/CommentItem";
+import MentionInput from "@/components/shared/MentionInput";
 import { createNotification } from "@/hooks/useNotifications";
 
 const noticeStyle = { bg: "bg-primary/10", border: "border-primary/30", text: "text-primary", badge: "bg-primary/15 text-primary" };
@@ -167,10 +168,10 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
             </div>
           )}
           <div className="flex gap-2">
-            <Input
+            <MentionInput
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Escreva um comentário..."
+              onChange={setCommentText}
+              placeholder="Escreva um comentário... use @ para mencionar"
               className="h-8 text-sm bg-background/60"
               onKeyDown={(e) => e.key === "Enter" && handleComment()}
             />
