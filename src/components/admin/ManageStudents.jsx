@@ -463,13 +463,14 @@ export default function ManageStudents() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Status</p>
+                      <p className="text-xs text-muted-foreground mb-1.5">Status</p>
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={isActive}
                           onCheckedChange={() => handleToggleActive(student)}
+                          disabled={student.is_invited}
                         />
-                        <span className="text-xs">{isActive ? "Ativa" : "Inativa"}</span>
+                        <span className="text-xs">{student.is_invited ? "Inativa (convite pendente)" : isActive ? "Ativa" : "Inativa"}</span>
                       </div>
                     </div>
                     {student.notes && (

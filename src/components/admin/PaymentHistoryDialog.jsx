@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,13 +12,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
-const planPrices = {
-  "4_aulas": 230,
-  "8_aulas": 380,
-  "12_aulas": 500,
-  "avulsa": 0,
-};
-
 export default function PaymentHistoryDialog({ student, onClose }) {
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
@@ -27,10 +20,33 @@ export default function PaymentHistoryDialog({ student, onClose }) {
   const [form, setForm] = useState({
     payment_date: format(new Date(), "yyyy-MM-dd"),
     plan_name: student.plan || "4_aulas",
-    amount: planPrices[student.plan || "4_aulas"] || 0,
+    amount: 0,
     payment_method: "pix",
     explanation: "",
   });
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["studioPlans"],
+    queryFn: () => base44.entities.StudioPlan.list(),
+  });
+
+  const getPlanPrice = (key) => {
+    const plan = plans.find(p => p.key === key);
+    return plan?.price_value || 0;
+  };
+
+  const getPlanLabel = (key) => {
+    const plan = plans.find(p => p.key === key);
+    return plan?.label || key;
+  };
+
+  // Auto-preencher preço quando montar ou mudar plano
+  React.useEffect(() => {
+    if (plans.length > 0 && form.amount === 0) {
+      const price = getPlanPrice(form.plan_name);
+      setForm(f => ({ ...f, amount: price }));
+    }
+  }, [plans]);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["paymentHistory", student.id],
@@ -61,7 +77,8 @@ export default function PaymentHistoryDialog({ student, onClose }) {
       toast.success("Pagamento registrado!");
       setAdding(false);
       setAmountEdited(false);
-      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: planPrices[student.plan || "4_aulas"] || 0, payment_method: "pix", explanation: "" });
+      const initialPrice = getPlanPrice(student.plan || "4_aulas");
+      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: initialPrice, payment_method: "pix", explanation: "" });
     } catch {
       toast.error("Erro ao registrar pagamento");
     }
@@ -107,7 +124,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
             <div>
               <Label className="text-xs mb-1 block">Plano *</Label>
               <Select value={form.plan_name} onValueChange={(v) => {
-                const newAmount = planPrices[v] || 0;
+                const newAmount = getPlanPrice(v);
                 setForm(f => ({ ...f, plan_name: v, amount: newAmount }));
                 setAmountEdited(false);
               }}>
@@ -115,18 +132,18 @@ export default function PaymentHistoryDialog({ student, onClose }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="4_aulas">4 aulas/mês — R$ 230</SelectItem>
-                  <SelectItem value="8_aulas">8 aulas/mês — R$ 380</SelectItem>
-                  <SelectItem value="12_aulas">12 aulas/mês — R$ 500</SelectItem>
-                  <SelectItem value="avulsa">Avulsa</SelectItem>
+                  {plans.map(p => (
+                    <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Valor (R$)</Label>
+              <Label className="text-xs mb-1 block">Valor (R$) — {form.amount ? `R$ ${parseFloat(form.amount).toFixed(2).replace(".", ",")}` : "—"}</Label>
               <Input type="number" value={form.amount} onChange={(e) => {
+                const originalPrice = getPlanPrice(form.plan_name);
                 setForm(f => ({ ...f, amount: e.target.value }));
-                setAmountEdited(e.target.value !== (planPrices[form.plan_name] || 0).toString());
+                setAmountEdited(parseFloat(e.target.value) !== originalPrice);
               }} className="h-8 text-sm" placeholder="Ex: 230" />
             </div>
             {amountEdited && (
