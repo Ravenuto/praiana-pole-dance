@@ -126,12 +126,21 @@ export default function ManageStudents() {
     setSavingManual(false);
   };
 
-  const handlePlanChange = async (userId, plan) => {
-    await base44.entities.User.update(userId, {
-      plan,
-      credits: planCredits[plan] || 4,
-      plan_start_date: format(new Date(), "yyyy-MM-dd"),
-    });
+  const handlePlanChange = async (student, plan) => {
+    if (student.is_invited) {
+      // Para convites pendentes, atualiza StudentInvitation
+      await base44.entities.StudentInvitation.update(student.id, {
+        plan,
+        credits: planCredits[plan] || 4,
+      });
+    } else {
+      // Para usuários normais
+      await base44.entities.User.update(student.id, {
+        plan,
+        credits: planCredits[plan] || 4,
+        plan_start_date: format(new Date(), "yyyy-MM-dd"),
+      });
+    }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     toast.success("Plano atualizado! Créditos resetados para " + planCredits[plan]);
   };
@@ -149,7 +158,15 @@ export default function ManageStudents() {
   };
 
   const handleToggleActive = async (student) => {
-    await base44.entities.User.update(student.id, { is_active: student.is_active === false ? true : false });
+    if (student.is_invited) {
+      // Para invites pendentes, atualiza StudentInvitation
+      await base44.entities.StudentInvitation.update(student.id, { 
+        status: student.status === "cancelled" ? "pending" : "cancelled" 
+      });
+    } else {
+      // Para usuários normais, atualiza User
+      await base44.entities.User.update(student.id, { is_active: student.is_active === false ? true : false });
+    }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     toast.success(student.is_active === false ? "Aluna reativada" : "Aluna desativada");
   };
@@ -170,6 +187,9 @@ export default function ManageStudents() {
 
   const handleSaveEdit = async () => {
     if (!editDialog) return;
+    if (editDialog.student.is_invited) {
+      return toast.error("Não é possível editar convites pendentes");
+    }
     setSavingEdit(true);
     await base44.entities.User.update(editDialog.student.id, {
       phone: editDialog.phone,
@@ -289,7 +309,7 @@ export default function ManageStudents() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Select value={plan} onValueChange={(v) => handlePlanChange(student.id, v)}>
+                    <Select value={plan} onValueChange={(v) => handlePlanChange(student, v)} disabled={student.is_invited}>
                       <SelectTrigger className="w-36 h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -305,6 +325,7 @@ export default function ManageStudents() {
                       size="sm"
                       className="h-8 text-xs gap-1"
                       onClick={() => { setCreditDialog({ student }); setCreditValue(0); }}
+                      disabled={student.is_invited}
                     >
                       <Plus className="h-3 w-3" />
                       {student.credits || 0} créditos
@@ -315,6 +336,7 @@ export default function ManageStudents() {
                       className="h-8 w-8 p-0"
                       title="Editar detalhes"
                       onClick={() => setEditDialog({ student, phone: student.phone || "", birth_date: student.birth_date || "", notes: student.notes || "", plan_start_date: student.plan_start_date || "" })}
+                      disabled={student.is_invited}
                     >
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
