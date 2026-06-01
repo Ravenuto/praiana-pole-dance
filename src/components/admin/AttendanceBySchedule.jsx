@@ -179,14 +179,14 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                       <p className="text-xs text-muted-foreground">{session.instructor || ""}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Badge className="bg-green-100 text-green-700 border-0 text-xs h-6 px-1.5 gap-0.5">
-                      <Check className="h-2.5 w-2.5" />{present}
+                  <div className="flex items-center gap-0.5 shrink-0 flex-wrap justify-end">
+                    <Badge className="bg-green-100 text-green-700 border-0 text-xs h-5 px-1.5 gap-0.5 text-[11px]">
+                      <Check className="h-2 w-2" />{present}
                     </Badge>
-                    <Badge className="bg-primary/10 text-primary border-0 text-xs h-6 px-1.5 gap-0.5">
-                      <Users className="h-2.5 w-2.5" />{activeCount}
+                    <Badge className="bg-primary/10 text-primary border-0 text-xs h-5 px-1.5 gap-0.5 text-[11px]">
+                      <Users className="h-2 w-2" />{activeCount}
                     </Badge>
-                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
                   </div>
                 </button>
 

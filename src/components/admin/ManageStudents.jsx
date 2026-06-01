@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserPlus, Mail, Loader2, Plus, Minus, Pencil, Search, ChevronDown, ChevronUp, History, Send } from "lucide-react";
 import PaymentHistoryDialog from "@/components/admin/PaymentHistoryDialog";
-import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -43,6 +43,20 @@ export default function ManageStudents() {
   const [expandedId, setExpandedId] = useState(null);
   const [paymentDialog, setPaymentDialog] = useState(null);
   const [sendingWelcome, setSendingWelcome] = useState(null);
+  const [creatingTestStudent, setCreatingTestStudent] = useState(false);
+
+  const handleCreateTestStudent = async () => {
+    setCreatingTestStudent(true);
+    try {
+      await base44.functions.invoke("createTestStudent", {});
+      await new Promise(r => setTimeout(r, 2000));
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+      toast.success("Aluna teste criada!");
+    } catch {
+      toast.error("Erro ao criar aluna teste");
+    }
+    setCreatingTestStudent(false);
+  };
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["allUsers"],
@@ -174,19 +188,11 @@ export default function ManageStudents() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={async () => {
-              try {
-                await base44.functions.invoke("createTestStudent", {});
-                await new Promise(r => setTimeout(r, 2000));
-                queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-                toast.success("Aluna teste criada!");
-              } catch {
-                toast.error("Erro ao criar aluna teste");
-              }
-            }}
+            onClick={handleCreateTestStudent}
+            disabled={creatingTestStudent}
             className="text-xs"
           >
-            Criar aluna de teste
+            {creatingTestStudent ? <Loader2 className="h-3 w-3 animate-spin" /> : "Criar aluna de teste"}
           </Button>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
