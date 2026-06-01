@@ -8,44 +8,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
-    const testEmail = "aluna.teste@praiana.app";
+    const testEmail = `aluna.teste.${Date.now()}@praiana.app`;
     
-    // Verificar se já existe
-    let existingUsers = await base44.asServiceRole.entities.User.filter({ email: testEmail });
+    // Criar usuário diretamente via asServiceRole
+    const newUser = await base44.asServiceRole.entities.User.create({
+      email: testEmail,
+      full_name: "Aluna Teste",
+      role: "user",
+      plan: "4_aulas",
+      credits: 4,
+      plan_start_date: "2026-05-20",
+      last_payment_date: "2026-05-20",
+      is_active: true,
+      phone: "(11) 98765-4321",
+      birth_date: "1995-03-15",
+      notes: ""
+    });
     
-    if (existingUsers.length > 0) {
-      // Já existe, atualiza dados
-      const testUser = existingUsers[0];
-      await base44.asServiceRole.entities.User.update(testUser.id, {
-        full_name: "Aluna Teste",
-        plan: "4_aulas",
-        credits: 4,
-        plan_start_date: "2026-05-20",
-        last_payment_date: "2026-05-20",
-        is_active: true,
-        phone: "(11) 98765-4321",
-        birth_date: "1995-03-15"
-      });
-      return Response.json({ 
-        success: true, 
-        message: "✅ Aluna teste atualizada com sucesso!",
-        email: testEmail
-      });
-    }
-
-    // Convidar para criar a conta
-    await base44.users.inviteUser(testEmail, "user");
-    
-    // Aguardar criação em background (não bloqueia)
-    // Retorna sucesso imediato
     return Response.json({ 
       success: true, 
-      message: "✅ Convite enviado! A aluna será criada em breve.",
-      email: testEmail
+      message: `✅ Aluna teste criada com sucesso!`,
+      email: testEmail,
+      userId: newUser.id
     });
 
   } catch (error) {
-    console.error('Erro ao criar aluna teste:', error);
+    console.error('Erro:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

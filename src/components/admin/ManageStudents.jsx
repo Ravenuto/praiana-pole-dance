@@ -48,13 +48,11 @@ export default function ManageStudents() {
   const handleCreateTestStudent = async () => {
     setCreatingTestStudent(true);
     try {
-      await base44.functions.invoke("createTestStudent", {});
-      toast.success("Aluna teste sendo criada... Aguarde 30 segundos");
-      // Aguarda mais tempo para a aluna ser criada no sistema
-      await new Promise(r => setTimeout(r, 5000));
+      const response = await base44.functions.invoke("createTestStudent", {});
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    } catch {
-      toast.error("Erro ao criar aluna teste");
+      toast.success(`✅ Aluna teste criada! Email: ${response.data.email}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Erro ao criar aluna teste");
     }
     setCreatingTestStudent(false);
   };
