@@ -12,10 +12,11 @@ function getWeekDays(anchor) {
 const DAY_KEY_MAP = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
 
 export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, onWeekChange }) {
-  const weekDays = getWeekDays(weekAnchor);
+  const anchor = weekAnchor instanceof Date && !isNaN(weekAnchor) ? weekAnchor : new Date();
+  const weekDays = getWeekDays(anchor);
 
-  const prevWeek = () => onWeekChange(addDays(weekAnchor, -7));
-  const nextWeek = () => onWeekChange(addDays(weekAnchor, 7));
+  const prevWeek = () => onWeekChange(addDays(anchor, -7));
+  const nextWeek = () => onWeekChange(addDays(anchor, 7));
 
   return (
     <div className="flex items-center gap-1">
