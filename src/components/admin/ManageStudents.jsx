@@ -63,7 +63,10 @@ export default function ManageStudents() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["allUsers"],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: async () => {
+      const response = await base44.functions.invoke("getAllUsers", {});
+      return response.data.users;
+    },
   });
 
   const students = users.filter((u) => u.role !== "admin");
