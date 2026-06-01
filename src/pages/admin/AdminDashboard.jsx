@@ -41,9 +41,9 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 font-body">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold">Painel Admin</h1>
-        <p className="mt-1 text-muted-foreground text-sm">Gerencie modalidades, horários e reservas</p>
-      </div>
+         <h1 className="font-heading text-lg font-semibold">Painel Admin</h1>
+         <p className="mt-1 text-muted-foreground text-xs">Gerencie modalidades, horários e reservas</p>
+       </div>
 
       {/* Tab nav — grid para caber na tela em mobile */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mb-6">

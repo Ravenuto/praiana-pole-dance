@@ -84,13 +84,13 @@ export default function ManageClassTypes() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-heading text-xl font-semibold">Modalidades</h2>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="rounded-full gap-2">
-              <Plus className="h-4 w-4" /> Nova Modalidade
-            </Button>
-          </DialogTrigger>
+         <h2 className="font-heading text-base font-semibold">Modalidades</h2>
+         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
+           <DialogTrigger asChild>
+             <Button size="sm" className="rounded-full gap-2 text-xs">
+               <Plus className="h-4 w-4" /> Nova Modalidade
+             </Button>
+           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-heading">{editingId ? "Editar" : "Nova"} Modalidade</DialogTitle>
@@ -163,8 +163,8 @@ export default function ManageClassTypes() {
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ct.color || "#c2185b" }} />
                 <div>
-                  <p className="font-medium">{ct.name}</p>
-                  <p className="text-sm text-muted-foreground">{ct.duration_minutes || 60}min · Até {ct.max_students || 8} alunas</p>
+                  <p className="font-semibold text-sm">{ct.name}</p>
+                   <p className="text-xs text-muted-foreground">{ct.duration_minutes || 60}min · Até {ct.max_students || 8} alunas</p>
                 </div>
               </div>
               <div className="flex gap-1">

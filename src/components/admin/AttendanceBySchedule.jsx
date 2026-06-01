@@ -186,10 +186,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                       <p className="font-medium text-sm">{session.class_type_name} — {session.time}</p>
-                       <p className="text-xs text-muted-foreground">{session.instructor || ""}</p>
+                       <p className="font-semibold text-xs">{session.class_type_name} — {session.time}</p>
+                       <p className="text-[11px] text-muted-foreground">{session.instructor || ""}</p>
                        {session.session_overrides && session.session_overrides[selectedDate] && (
-                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">📝 {session.session_overrides[selectedDate].notes}</p>
+                         <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">📝 {session.session_overrides[selectedDate].notes}</p>
                        )}
                      </div>
                   </div>
@@ -238,8 +238,8 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                             return (
                               <div key={booking.id} className="flex items-center justify-between gap-3 px-4 py-3">
                                 <div className="min-w-0">
-                                   <p className="font-medium text-xs truncate">{booking.student_name || "—"}</p>
-                                   <p className="text-[11px] text-muted-foreground truncate">{booking.student_email}</p>
+                                   <p className="font-semibold text-[11px] truncate">{booking.student_name || "—"}</p>
+                                   <p className="text-[10px] text-muted-foreground truncate">{booking.student_email}</p>
                                  </div>
                                  <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
                                    <SelectTrigger className="w-32 h-8 text-[11px]">

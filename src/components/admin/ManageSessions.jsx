@@ -284,11 +284,11 @@ export default function ManageSessions() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading text-xl font-semibold">Horários de Aula</h2>
-        <Button size="sm" className="rounded-full gap-2" onClick={() => { setForm(emptyForm); setEditingId(null); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> Novo Horário
-        </Button>
-      </div>
+         <h2 className="font-heading text-base font-semibold">Horários de Aula</h2>
+         <Button size="sm" className="rounded-full gap-2 text-xs" onClick={() => { setForm(emptyForm); setEditingId(null); setOpen(true); }}>
+           <Plus className="h-4 w-4" /> Novo Horário
+         </Button>
+       </div>
 
       {/* Seletor de data com calendário — igual ao das alunas */}
       <div className="relative mb-3">
@@ -364,26 +364,26 @@ export default function ManageSessions() {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-xs">{s.class_type_name} — {s.time}</p>
+                      <p className="font-semibold text-xs">{s.class_type_name} · {s.time}</p>
                        {s.instructor && (
-                         <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                         <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                            <User className="h-3 w-3" /> {s.instructor}
                          </p>
                        )}
                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                         <span className={`text-[11px] flex items-center gap-1 ${isFull ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                          <Users className="h-3 w-3" /> {booked}/{max} {isFull ? "— Lotada" : ""}
+                         <span className={`text-[10px] flex items-center gap-1 ${isFull ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          <Users className="h-3 w-3" /> {booked}/{max} {isFull ? "Lotada" : ""}
                         </span>
                         {!s.is_recurring && (
-                          <span className="text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Aula única</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Única</span>
                         )}
                         {s.notes && (
-                            <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{s.notes}</span>
+                            <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{s.notes}</span>
                           )}
                           {s.session_overrides && s.session_overrides[selectedDate] && (
-                            <span className="text-[11px] bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full">📝 {s.session_overrides[selectedDate].notes}</span>
+                            <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full">📝 {s.session_overrides[selectedDate].notes}</span>
                           )}
-                      </div>
+                       </div>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
