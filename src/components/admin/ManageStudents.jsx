@@ -44,6 +44,8 @@ export default function ManageStudents() {
   const [paymentDialog, setPaymentDialog] = useState(null);
   const [sendingWelcome, setSendingWelcome] = useState(null);
   const [creatingTestStudent, setCreatingTestStudent] = useState(false);
+  const [resendingInvite, setResendingInvite] = useState(null);
+  const [deletingStudent, setDeletingStudent] = useState(null);
 
   const handleCreateTestStudent = async () => {
     setCreatingTestStudent(true);
@@ -183,6 +185,38 @@ export default function ManageStudents() {
       toast.error("Erro ao enviar email");
     }
     setSendingWelcome(null);
+  };
+
+  const handleResendInvite = async (student) => {
+    setResendingInvite(student.id);
+    try {
+      await base44.functions.invoke("resendInviteEmail", {
+        email: student.email,
+      });
+      toast.success("Convite reenviado para " + student.email);
+    } catch {
+      toast.error("Erro ao reenviar convite");
+    }
+    setResendingInvite(null);
+  };
+
+  const handleDeleteStudent = async (student) => {
+    if (!window.confirm(`Tem certeza que deseja deletar ${student.full_name || student.email}?`)) {
+      return;
+    }
+    setDeletingStudent(student.id);
+    try {
+      if (student.is_invited) {
+        await base44.entities.StudentInvitation.delete(student.id);
+      } else {
+        await base44.entities.User.delete(student.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+      toast.success("Aluna deletada");
+    } catch {
+      toast.error("Erro ao deletar aluna");
+    }
+    setDeletingStudent(null);
   };
 
   const handleSaveEdit = async () => {
@@ -358,6 +392,28 @@ export default function ManageStudents() {
                       disabled={sendingWelcome === student.id}
                     >
                       {sendingWelcome === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </Button>
+                    {student.is_invited && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs gap-1"
+                        title="Reenviar convite"
+                        onClick={() => handleResendInvite(student)}
+                        disabled={resendingInvite === student.id}
+                      >
+                        {resendingInvite === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Reenviar"}
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title="Deletar aluna"
+                      onClick={() => handleDeleteStudent(student)}
+                      disabled={deletingStudent === student.id}
+                    >
+                      {deletingStudent === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Minus className="h-3.5 w-3.5 text-destructive" />}
                     </Button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : student.id)}
