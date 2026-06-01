@@ -195,8 +195,8 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                       <Clock className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                       <p className="font-semibold text-[10px] truncate">{session.class_type_name} — {session.time}</p>
-                       <p className="text-[9px] text-muted-foreground truncate">{session.instructor || ""}</p>
+                       <p className="font-semibold text-xs truncate">{session.class_type_name} — {session.time}</p>
+                       <p className="text-[10px] text-muted-foreground truncate">{session.instructor || ""}</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
