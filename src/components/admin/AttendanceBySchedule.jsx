@@ -135,38 +135,38 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Navegação da semana */}
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1 hover:bg-muted rounded transition-colors">
+          <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+        <div className="flex gap-0.5">
+          {weekDays.map((day) => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            const isSelected = dateStr === selectedDate;
+            const dayLabel = format(day, "EEE", { locale: ptBR });
+            const dayNum = format(day, "d");
+            return (
+              <button
+                key={dateStr}
+                onClick={() => setSelectedDate(dateStr)}
+                className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[9px] font-medium transition-colors ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                <span className="capitalize">{dayLabel}</span>
+                <span className="font-semibold text-[10px]">{dayNum}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1 hover:bg-muted rounded transition-colors">
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] text-muted-foreground capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
-        <div className="flex items-center gap-0.5">
-          <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1 hover:bg-muted rounded transition-colors">
-            <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
-          <div className="flex gap-0.5">
-            {weekDays.map((day) => {
-              const dateStr = format(day, "yyyy-MM-dd");
-              const isSelected = dateStr === selectedDate;
-              const dayLabel = format(day, "EEE", { locale: ptBR });
-              const dayNum = format(day, "d");
-              return (
-                <button
-                  key={dateStr}
-                  onClick={() => setSelectedDate(dateStr)}
-                  className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[9px] font-medium transition-colors ${
-                    isSelected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <span className="capitalize">{dayLabel}</span>
-                  <span className="font-semibold text-[10px]">{dayNum}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1 hover:bg-muted rounded transition-colors">
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
-        </div>
         <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-6 w-28 text-[10px]" />
       </div>
 
