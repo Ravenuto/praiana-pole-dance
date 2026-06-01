@@ -165,9 +165,9 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       </div>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] text-muted-foreground capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
-        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-6 w-32 text-[10px]" />
+        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-6 w-28 text-[10px]" />
       </div>
 
       {loadingSessions ? (
