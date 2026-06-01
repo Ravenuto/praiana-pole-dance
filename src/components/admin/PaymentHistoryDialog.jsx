@@ -12,16 +12,24 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
+const planPrices = {
+  "4_aulas": 230,
+  "8_aulas": 380,
+  "12_aulas": 500,
+  "avulsa": 0,
+};
+
 export default function PaymentHistoryDialog({ student, onClose }) {
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [amountEdited, setAmountEdited] = useState(false);
   const [form, setForm] = useState({
     payment_date: format(new Date(), "yyyy-MM-dd"),
     plan_name: student.plan || "4_aulas",
-    amount: "",
+    amount: planPrices[student.plan || "4_aulas"] || 0,
     payment_method: "pix",
-    notes: "",
+    explanation: "",
   });
 
   const { data: payments = [], isLoading } = useQuery({
@@ -31,6 +39,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
 
   const handleAdd = async () => {
     if (!form.payment_date) return toast.error("Data de pagamento obrigatória");
+    if (amountEdited && !form.explanation) return toast.error("Explicação é obrigatória quando o valor é alterado");
     setSaving(true);
     try {
       await base44.entities.PaymentHistory.create({
@@ -41,7 +50,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
         amount: parseFloat(form.amount) || 0,
         payment_date: form.payment_date,
         payment_method: form.payment_method,
-        notes: form.notes,
+        notes: form.explanation || "",
       });
       // Atualiza last_payment_date no perfil da aluna
       await base44.entities.User.update(student.id, {
@@ -51,7 +60,8 @@ export default function PaymentHistoryDialog({ student, onClose }) {
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       toast.success("Pagamento registrado!");
       setAdding(false);
-      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: "", payment_method: "pix", notes: "" });
+      setAmountEdited(false);
+      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: planPrices[student.plan || "4_aulas"] || 0, payment_method: "pix", explanation: "" });
     } catch {
       toast.error("Erro ao registrar pagamento");
     }
@@ -96,22 +106,35 @@ export default function PaymentHistoryDialog({ student, onClose }) {
             </div>
             <div>
               <Label className="text-xs mb-1 block">Plano *</Label>
-              <Select value={form.plan_name} onValueChange={(v) => setForm(f => ({ ...f, plan_name: v }))}>
+              <Select value={form.plan_name} onValueChange={(v) => {
+                const newAmount = planPrices[v] || 0;
+                setForm(f => ({ ...f, plan_name: v, amount: newAmount }));
+                setAmountEdited(false);
+              }}>
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
-                  <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
-                  <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
+                  <SelectItem value="4_aulas">4 aulas/mês — R$ 230</SelectItem>
+                  <SelectItem value="8_aulas">8 aulas/mês — R$ 380</SelectItem>
+                  <SelectItem value="12_aulas">12 aulas/mês — R$ 500</SelectItem>
                   <SelectItem value="avulsa">Avulsa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label className="text-xs mb-1 block">Valor (R$)</Label>
-              <Input type="number" value={form.amount} onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))} className="h-8 text-sm" placeholder="Ex: 230" />
+              <Input type="number" value={form.amount} onChange={(e) => {
+                setForm(f => ({ ...f, amount: e.target.value }));
+                setAmountEdited(e.target.value !== (planPrices[form.plan_name] || 0).toString());
+              }} className="h-8 text-sm" placeholder="Ex: 230" />
             </div>
+            {amountEdited && (
+              <div>
+                <Label className="text-xs mb-1 block">Explicação da alteração *</Label>
+                <Input value={form.explanation} onChange={(e) => setForm(f => ({ ...f, explanation: e.target.value }))} className="h-8 text-sm" placeholder="Ex: Desconto promocional, bônus..." />
+              </div>
+            )}
             <div>
               <Label className="text-xs mb-1 block">Forma de pagamento</Label>
               <Select value={form.payment_method} onValueChange={(v) => setForm(f => ({ ...f, payment_method: v }))}>
@@ -121,15 +144,8 @@ export default function PaymentHistoryDialog({ student, onClose }) {
                 <SelectContent>
                   <SelectItem value="pix">PIX</SelectItem>
                   <SelectItem value="cartao_credito">Cartão de crédito</SelectItem>
-                  <SelectItem value="cartao_debito">Cartão de débito</SelectItem>
-                  <SelectItem value="boleto">Boleto</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs mb-1 block">Observações</Label>
-              <Input value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} className="h-8 text-sm" placeholder="Ex: Última parcela..." />
             </div>
             <Button onClick={handleAdd} disabled={saving} className="w-full rounded-full">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}

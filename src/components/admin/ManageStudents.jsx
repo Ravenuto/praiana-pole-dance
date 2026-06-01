@@ -161,16 +161,15 @@ export default function ManageStudents() {
 
   const handleToggleActive = async (student) => {
     if (student.is_invited) {
-      // Para invites pendentes, atualiza StudentInvitation
-      await base44.entities.StudentInvitation.update(student.id, { 
-        status: student.status === "cancelled" ? "pending" : "cancelled" 
-      });
-    } else {
-      // Para usuários normais, atualiza User
-      await base44.entities.User.update(student.id, { is_active: student.is_active === false ? true : false });
+      // Para invites pendentes, não muda nada (permanecem inativos)
+      toast.info("Alunas com convite pendente não podem ser ativadas");
+      return;
     }
+    // Para usuários normais, apenas alterna o status
+    const newStatus = student.is_active === false ? true : false;
+    await base44.entities.User.update(student.id, { is_active: newStatus });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    toast.success(student.is_active === false ? "Aluna reativada" : "Aluna desativada");
+    toast.success(newStatus ? "Aluna ativada" : "Aluna desativada");
   };
 
   const handleSendWelcomeEmail = async (student) => {
@@ -402,7 +401,7 @@ export default function ManageStudents() {
                         onClick={() => handleResendInvite(student)}
                         disabled={resendingInvite === student.id}
                       >
-                        {resendingInvite === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "📧"}
+                        {resendingInvite === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mail className="h-3.5 w-3.5 text-muted-foreground" />}
                       </Button>
                     )}
                     <Button
