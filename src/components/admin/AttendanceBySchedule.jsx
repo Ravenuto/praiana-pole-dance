@@ -135,11 +135,11 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Navegação da semana */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-center gap-2 mb-2">
         <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1 hover:bg-muted rounded transition-colors">
-          <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
         </button>
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {weekDays.map((day) => {
             const dateStr = format(day, "yyyy-MM-dd");
             const isSelected = dateStr === selectedDate;
@@ -149,25 +149,25 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
               <button
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[9px] font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
                   isSelected
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                <span className="capitalize">{dayLabel}</span>
-                <span className="font-semibold text-[10px]">{dayNum}</span>
+                <span className="capitalize leading-tight">{dayLabel}</span>
+                <span className="font-semibold text-[11px] leading-tight">{dayNum}</span>
               </button>
             );
           })}
         </div>
         <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1 hover:bg-muted rounded transition-colors">
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
-      <div className="flex items-center justify-between gap-4 mb-3 px-1">
-        <p className="text-xs font-medium text-foreground capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
-        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-7 text-xs" />
+      <div className="flex items-center justify-center gap-6 mb-3">
+        <p className="text-xs text-muted-foreground capitalize flex-1 text-left">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-7 text-xs w-32" />
       </div>
 
       {loadingSessions ? (
