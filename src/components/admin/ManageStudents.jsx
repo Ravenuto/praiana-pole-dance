@@ -49,9 +49,10 @@ export default function ManageStudents() {
     setCreatingTestStudent(true);
     try {
       await base44.functions.invoke("createTestStudent", {});
-      await new Promise(r => setTimeout(r, 2000));
+      toast.success("Aluna teste sendo criada... Aguarde 30 segundos");
+      // Aguarda mais tempo para a aluna ser criada no sistema
+      await new Promise(r => setTimeout(r, 5000));
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-      toast.success("Aluna teste criada!");
     } catch {
       toast.error("Erro ao criar aluna teste");
     }
