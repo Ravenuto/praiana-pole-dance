@@ -15,15 +15,6 @@ import PaymentHistoryDialog from "@/components/admin/PaymentHistoryDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const planInfo = {
-  "4_aulas": { label: "4 aulas/mês", color: "bg-blue-100 text-blue-700" },
-  "8_aulas": { label: "8 aulas/mês", color: "bg-purple-100 text-purple-700" },
-  "12_aulas": { label: "12 aulas/mês", color: "bg-pink-100 text-pink-700" },
-  "avulsa": { label: "Aula avulsa", color: "bg-amber-100 text-amber-700" },
-};
-
-const planCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
-
 const EMPTY_MANUAL = { name: "", email: "", phone: "", birth_date: "", plan: "4_aulas", credits: 4 };
 
 export default function ManageStudents() {
@@ -63,6 +54,11 @@ export default function ManageStudents() {
     setCreatingTestStudent(false);
   };
 
+  const { data: plans = [] } = useQuery({
+    queryKey: ["studioPlans"],
+    queryFn: () => base44.entities.StudioPlan.filter({ is_active: true }),
+  });
+
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["allUsers"],
     queryFn: async () => {
@@ -70,6 +66,10 @@ export default function ManageStudents() {
       return response.data.users;
     },
   });
+
+  const planInfo = Object.fromEntries(
+    plans.map((p) => [p.key, { label: p.label, credits: p.credits }])
+  );
 
   const students = users.filter((u) => u.role !== "admin");
 
@@ -138,22 +138,24 @@ export default function ManageStudents() {
   };
 
   const handlePlanChange = async (student, plan) => {
+    const selectedPlan = plans.find((p) => p.key === plan);
+    const credits = selectedPlan?.credits || 4;
     if (student.is_invited) {
       // Para convites pendentes, atualiza StudentInvitation
       await base44.entities.StudentInvitation.update(student.id, {
         plan,
-        credits: planCredits[plan] || 4,
+        credits,
       });
     } else {
       // Para usuários normais
       await base44.entities.User.update(student.id, {
         plan,
-        credits: planCredits[plan] || 4,
+        credits,
         plan_start_date: format(new Date(), "yyyy-MM-dd"),
       });
     }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    toast.success("Plano atualizado! Créditos resetados para " + planCredits[plan]);
+    toast.success("Plano atualizado! Créditos resetados para " + credits);
   };
 
   const handleSaveCredits = async () => {
@@ -234,6 +236,8 @@ export default function ManageStudents() {
     }
     setSavingEdit(true);
     await base44.entities.User.update(editDialog.student.id, {
+      plan: editDialog.student.plan,
+      credits: editDialog.student.credits,
       phone: editDialog.phone,
       birth_date: editDialog.birth_date,
       notes: editDialog.notes,
@@ -339,7 +343,8 @@ export default function ManageStudents() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-sm truncate">{student.full_name || "—"}</p>
                         {student.is_invited && <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">Convite pendente</Badge>}
-                        {!isActive && <Badge className="bg-muted text-muted-foreground border-0 text-xs">Inativa</Badge>}
+                        {isActive && !student.is_invited && <Badge className="bg-green-100 text-green-700 border-0 text-xs">Ativa</Badge>}
+                        {!isActive && !student.is_invited && <Badge className="bg-red-100 text-red-700 border-0 text-xs">Inativa</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{student.email}</p>
                       {student.plan_start_date && (
@@ -356,10 +361,11 @@ export default function ManageStudents() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
-                        <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
-                        <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
-                        <SelectItem value="avulsa">Avulsa</SelectItem>
+                        {plans.map((p) => (
+                          <SelectItem key={p.key} value={p.key}>
+                            {p.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <Button
@@ -522,15 +528,19 @@ export default function ManageStudents() {
               </div>
               <div>
                 <Label className="text-xs mb-1 block">Plano inicial</Label>
-                <Select value={manualForm.plan} onValueChange={(v) => setManualForm((f) => ({ ...f, plan: v, credits: planCredits[v] || 4 }))}>
+                <Select value={manualForm.plan} onValueChange={(v) => {
+                  const selectedPlan = plans.find((p) => p.key === v);
+                  setManualForm((f) => ({ ...f, plan: v, credits: selectedPlan?.credits || 4 }));
+                }}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
-                    <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
-                    <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
-                    <SelectItem value="avulsa">Avulsa</SelectItem>
+                    {plans.map((p) => (
+                      <SelectItem key={p.key} value={p.key}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -603,6 +613,30 @@ export default function ManageStudents() {
             </DialogHeader>
             <div className="space-y-3 py-2">
               <p className="text-sm font-medium">{editDialog.student.full_name || editDialog.student.email}</p>
+              <div>
+                <Label className="text-xs mb-1 block">Plano</Label>
+                <Select 
+                  value={editDialog.student.plan || "4_aulas"} 
+                  onValueChange={(v) => {
+                    const selectedPlan = plans.find((p) => p.key === v);
+                    setEditDialog((d) => ({ 
+                      ...d, 
+                      student: { ...d.student, plan: v, credits: selectedPlan?.credits || 4 }
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map((p) => (
+                      <SelectItem key={p.key} value={p.key}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label className="text-xs mb-1 block">Telefone / WhatsApp</Label>
                 <Input value={editDialog.phone} onChange={(e) => setEditDialog((d) => ({ ...d, phone: e.target.value }))} className="h-8 text-sm" placeholder="(11) 99999-9999" />
