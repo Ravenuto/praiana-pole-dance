@@ -49,11 +49,11 @@ export default function ManageStudents() {
     setCreatingTestStudent(true);
     try {
       const response = await base44.functions.invoke("createTestStudent", {});
-      // Aguarda um pouco para o usuário ser persistido e depois recarrega a lista
-      await new Promise(r => setTimeout(r, 500));
-      const updatedUsers = await base44.entities.User.list();
-      queryClient.setQueryData(["allUsers"], updatedUsers);
       toast.success(`✅ Aluna teste criada: ${response.data.email}`);
+      // Refetch após 1s para garantir persistência
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["allUsers"] });
+      }, 1000);
     } catch (error) {
       console.error("Error:", error);
       toast.error(error?.message || "Erro ao criar aluna teste");
