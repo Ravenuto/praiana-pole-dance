@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserPlus, Mail, Loader2, Plus, Minus, Pencil, Search, ChevronDown, ChevronUp, History, Send } from "lucide-react";
+import { UserPlus, Mail, Loader2, Plus, Minus, Trash2, Pencil, Search, ChevronDown, ChevronUp, History, Send } from "lucide-react";
 import PaymentHistoryDialog from "@/components/admin/PaymentHistoryDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -397,12 +397,12 @@ export default function ManageStudents() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-2 text-xs gap-1"
+                        className="h-8 w-8 p-0"
                         title="Reenviar convite"
                         onClick={() => handleResendInvite(student)}
                         disabled={resendingInvite === student.id}
                       >
-                        {resendingInvite === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Reenviar"}
+                        {resendingInvite === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "📧"}
                       </Button>
                     )}
                     <Button
@@ -413,7 +413,7 @@ export default function ManageStudents() {
                       onClick={() => handleDeleteStudent(student)}
                       disabled={deletingStudent === student.id}
                     >
-                      {deletingStudent === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Minus className="h-3.5 w-3.5 text-destructive" />}
+                      {deletingStudent === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-destructive" />}
                     </Button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : student.id)}

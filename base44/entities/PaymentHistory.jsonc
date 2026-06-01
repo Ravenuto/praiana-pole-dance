@@ -27,6 +27,17 @@
       "format": "date",
       "description": "Data do pagamento"
     },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "pix",
+        "cartao_credito",
+        "cartao_debito",
+        "boleto",
+        "outro"
+      ],
+      "description": "Forma de pagamento"
+    },
     "notes": {
       "type": "string",
       "description": "Observa\u00e7\u00f5es sobre o pagamento"

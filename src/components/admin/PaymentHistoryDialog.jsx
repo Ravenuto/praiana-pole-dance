@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2, DollarSign, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,6 +20,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
     payment_date: format(new Date(), "yyyy-MM-dd"),
     plan_name: student.plan || "4_aulas",
     amount: "",
+    payment_method: "pix",
     notes: "",
   });
 
@@ -38,6 +40,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
         plan_name: form.plan_name,
         amount: parseFloat(form.amount) || 0,
         payment_date: form.payment_date,
+        payment_method: form.payment_method,
         notes: form.notes,
       });
       // Atualiza last_payment_date no perfil da aluna
@@ -48,7 +51,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       toast.success("Pagamento registrado!");
       setAdding(false);
-      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: "", notes: "" });
+      setForm({ payment_date: format(new Date(), "yyyy-MM-dd"), plan_name: student.plan || "4_aulas", amount: "", payment_method: "pix", notes: "" });
     } catch {
       toast.error("Erro ao registrar pagamento");
     }
@@ -92,16 +95,41 @@ export default function PaymentHistoryDialog({ student, onClose }) {
               <Input type="date" value={form.payment_date} onChange={(e) => setForm(f => ({ ...f, payment_date: e.target.value }))} className="h-8 text-sm" />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">Plano</Label>
-              <Input value={form.plan_name} onChange={(e) => setForm(f => ({ ...f, plan_name: e.target.value }))} className="h-8 text-sm" placeholder="Ex: 8 aulas/mês" />
+              <Label className="text-xs mb-1 block">Plano *</Label>
+              <Select value={form.plan_name} onValueChange={(v) => setForm(f => ({ ...f, plan_name: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="4_aulas">4 aulas/mês</SelectItem>
+                  <SelectItem value="8_aulas">8 aulas/mês</SelectItem>
+                  <SelectItem value="12_aulas">12 aulas/mês</SelectItem>
+                  <SelectItem value="avulsa">Avulsa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-xs mb-1 block">Valor (R$)</Label>
               <Input type="number" value={form.amount} onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))} className="h-8 text-sm" placeholder="Ex: 230" />
             </div>
             <div>
+              <Label className="text-xs mb-1 block">Forma de pagamento</Label>
+              <Select value={form.payment_method} onValueChange={(v) => setForm(f => ({ ...f, payment_method: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao_credito">Cartão de crédito</SelectItem>
+                  <SelectItem value="cartao_debito">Cartão de débito</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="text-xs mb-1 block">Observações</Label>
-              <Input value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} className="h-8 text-sm" placeholder="Ex: PIX" />
+              <Input value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} className="h-8 text-sm" placeholder="Ex: Última parcela..." />
             </div>
             <Button onClick={handleAdd} disabled={saving} className="w-full rounded-full">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
@@ -117,19 +145,23 @@ export default function PaymentHistoryDialog({ student, onClose }) {
           ) : (
             payments.map((p) => (
               <div key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-card">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
                     <DollarSign className="h-4 w-4 text-green-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       {format(new Date(p.payment_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
                       {p.amount ? ` — R$ ${p.amount.toFixed(2).replace(".", ",")}` : ""}
                     </p>
-                    <p className="text-xs text-muted-foreground">{planLabels[p.plan_name] || p.plan_name}{p.notes ? ` · ${p.notes}` : ""}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {planLabels[p.plan_name] || p.plan_name}
+                      {p.payment_method && ` · ${p.payment_method === "pix" ? "PIX" : p.payment_method === "cartao_credito" ? "Cartão crédito" : p.payment_method.replace("_", " ")}`}
+                      {p.notes && ` · ${p.notes}`}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(p.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => handleDelete(p.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
