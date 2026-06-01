@@ -13,8 +13,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Usa asServiceRole para listar TODOS os usuários sem restrições
+    // Usa asServiceRole para listar TODOS os usuários, inclusive os desabilitados
     const allUsers = await base44.asServiceRole.entities.User.list();
+    
+    // Log para debug
+    console.log(`Total de usuários retornados: ${allUsers.length}`);
+    allUsers.forEach(u => {
+      console.log(`- ${u.email} (${u.role}) - disabled: ${u.disabled}`);
+    });
 
     return Response.json({ users: allUsers });
   } catch (error) {

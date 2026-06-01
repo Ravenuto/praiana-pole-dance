@@ -10,20 +10,8 @@ Deno.serve(async (req) => {
 
     const testEmail = `aluna.teste.${Date.now()}@praiana.app`;
     
-    // Criar usuário diretamente via asServiceRole
-    const newUser = await base44.asServiceRole.entities.User.create({
-      email: testEmail,
-      full_name: "Aluna Teste",
-      role: "user",
-      plan: "4_aulas",
-      credits: 4,
-      plan_start_date: "2026-05-20",
-      last_payment_date: "2026-05-20",
-      is_active: true,
-      phone: "(11) 98765-4321",
-      birth_date: "1995-03-15",
-      notes: ""
-    });
+    // Convidar o usuário com role "user"
+    const newUser = await base44.asServiceRole.users.inviteUser(testEmail, "user");
     
     return Response.json({ 
       success: true, 
