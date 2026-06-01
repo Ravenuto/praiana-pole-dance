@@ -167,9 +167,28 @@ export default function ManageStudents() {
     <div>
       {/* Cadastrar */}
       <div className="mb-6 p-4 rounded-xl border border-border bg-card">
-        <h3 className="font-medium mb-3 flex items-center gap-2">
-          <UserPlus className="h-4 w-4 text-primary" /> Cadastrar nova aluna
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-primary" /> Cadastrar nova aluna
+          </h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={async () => {
+              try {
+                await base44.functions.invoke("createTestStudent", {});
+                await new Promise(r => setTimeout(r, 2000));
+                queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+                toast.success("Aluna teste criada!");
+              } catch {
+                toast.error("Erro ao criar aluna teste");
+              }
+            }}
+            className="text-xs"
+          >
+            Criar aluna de teste
+          </Button>
+        </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button onClick={() => setManualDialog(true)} className="gap-2 flex-1">
             <UserPlus className="h-4 w-4" /> Cadastro completo
