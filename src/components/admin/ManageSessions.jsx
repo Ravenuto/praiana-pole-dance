@@ -6,13 +6,49 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Clock, User, Users, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Clock, User, Users, ChevronLeft, ChevronRight, CalendarDays, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth, isSameDay, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector, { DAYS } from "@/components/schedule/DaySelector";
 
 const DAY_NAMES = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+// Dialog de confirmação de exclusão para aulas recorrentes
+function DeleteRecurringDialog({ session, date, onCancel, onDeleteOne, onDeleteAll }) {
+  const [loading, setLoading] = useState(false);
+  const doDelete = async (fn) => { setLoading(true); await fn(); setLoading(false); };
+  return (
+    <Dialog open onOpenChange={() => onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="font-heading">Excluir aula recorrente</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground mt-2">
+          Esta é uma aula da grade semanal. O que você deseja fazer?
+        </p>
+        <div className="mt-4 space-y-2">
+          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-3" disabled={loading}
+            onClick={() => doDelete(onDeleteOne)}>
+            <div>
+              <p className="font-medium text-sm">Somente este dia</p>
+              <p className="text-xs text-muted-foreground">Cancela apenas {date}</p>
+            </div>
+          </Button>
+          <Button variant="destructive" className="w-full justify-start gap-2 h-auto py-3" disabled={loading}
+            onClick={() => doDelete(onDeleteAll)}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            <div>
+              <p className="font-medium text-sm">Excluir este e todos os próximos</p>
+              <p className="text-xs opacity-80">Remove o horário da grade permanentemente</p>
+            </div>
+          </Button>
+        </div>
+        <Button variant="ghost" className="w-full mt-1" onClick={onCancel} disabled={loading}>Cancelar</Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const emptyForm = {
   class_type_id: "", class_type_name: "", day_of_week: "segunda",
@@ -26,6 +62,7 @@ export default function ManageSessions() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // session a ser deletada
 
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [weekAnchor, setWeekAnchor] = useState(new Date());
@@ -42,6 +79,25 @@ export default function ManageSessions() {
     queryFn: () => base44.entities.ClassSession.list(),
   });
 
+  const { data: holidays = [] } = useQuery({
+    queryKey: ["holidays", selectedDate],
+    queryFn: () => base44.entities.Holiday.filter({ date: selectedDate }),
+  });
+
+  const isHoliday = holidays.length > 0;
+  const holidayRecord = holidays[0] || null;
+
+  const toggleHoliday = async () => {
+    if (isHoliday) {
+      await base44.entities.Holiday.delete(holidayRecord.id);
+    } else {
+      await base44.entities.Holiday.create({ date: selectedDate, label: "Feriado" });
+    }
+    queryClient.invalidateQueries({ queryKey: ["holidays"] });
+    queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    toast.success(isHoliday ? "Feriado removido — aulas liberadas!" : "Feriado ativado para este dia!");
+  };
+
   const { data: bookings = [] } = useQuery({
     queryKey: ["bookings", selectedDate],
     queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100),
@@ -52,7 +108,11 @@ export default function ManageSessions() {
   const filteredSessions = useMemo(() => {
     return sessions
       .filter((s) => {
-        if (s.is_recurring) return s.day_of_week === selectedDayKey && s.is_active !== false;
+        if (s.is_recurring) {
+          if (s.day_of_week !== selectedDayKey || s.is_active === false) return false;
+          if (s.cancelled_dates && s.cancelled_dates.includes(selectedDate)) return false;
+          return true;
+        }
         return s.date === selectedDate && s.is_active !== false;
       })
       .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
@@ -114,12 +174,38 @@ export default function ManageSessions() {
     setOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Excluir este horário?")) return;
-    await base44.entities.ClassSession.delete(id);
+  const handleDelete = (session) => {
+    if (session.is_recurring) {
+      setDeleteTarget(session);
+    } else {
+      if (!confirm("Excluir esta aula única?")) return;
+      base44.entities.ClassSession.delete(session.id).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+        queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        toast.success("Aula excluída");
+      });
+    }
+  };
+
+  // Cancela apenas o dia: cria uma aula única "cancelada" como exceção
+  const handleDeleteOneDay = async () => {
+    // Marca a sessão recorrente com uma data cancelada (cancelled_dates array)
+    const s = deleteTarget;
+    const cancelled = s.cancelled_dates ? [...s.cancelled_dates, selectedDate] : [selectedDate];
+    await base44.entities.ClassSession.update(s.id, { cancelled_dates: cancelled });
     queryClient.invalidateQueries({ queryKey: ["allSessions"] });
     queryClient.invalidateQueries({ queryKey: ["sessions"] });
-    toast.success("Horário excluído");
+    setDeleteTarget(null);
+    toast.success("Aula cancelada para este dia");
+  };
+
+  // Exclui o horário permanentemente
+  const handleDeleteAll = async () => {
+    await base44.entities.ClassSession.delete(deleteTarget.id);
+    queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+    queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    setDeleteTarget(null);
+    toast.success("Horário excluído da grade");
   };
 
   // Mini calendário (igual ao Schedule)
@@ -222,9 +308,35 @@ export default function ManageSessions() {
         onWeekChange={(newAnchor) => setWeekAnchor(newAnchor)}
       />
 
+      {/* Botão feriado */}
+      <div className="mt-3">
+        <button
+          onClick={toggleHoliday}
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
+            isHoliday
+              ? "bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-400"
+              : "bg-muted/30 border-border text-muted-foreground hover:border-amber-300 hover:text-amber-600"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <PartyPopper className="h-4 w-4" />
+            <span className="text-sm font-medium">{isHoliday ? "🎉 Feriado ativo — clique para desativar" : "Marcar como feriado"}</span>
+          </div>
+          <div className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${isHoliday ? "bg-amber-400" : "bg-muted"}`}>
+            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${isHoliday ? "translate-x-4" : "translate-x-0"}`} />
+          </div>
+        </button>
+      </div>
+
       {/* Lista de aulas do dia */}
       <div className="mt-4 space-y-3">
-        {filteredSessions.length === 0 ? (
+        {isHoliday ? (
+          <div className="text-center py-12 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-800">
+            <span className="text-4xl">🎉</span>
+            <p className="font-semibold text-amber-700 dark:text-amber-400 mt-3">Feriado</p>
+            <p className="text-xs text-amber-600/80 mt-1">As aulas deste dia estão ocultas para as alunas</p>
+          </div>
+        ) : filteredSessions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <CalendarDays className="h-8 w-8 mx-auto mb-3 opacity-30" />
             <p className="font-medium">Nenhuma aula neste dia</p>
@@ -266,7 +378,7 @@ export default function ManageSessions() {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(s)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(s)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -276,6 +388,17 @@ export default function ManageSessions() {
           })
         )}
       </div>
+
+      {/* Dialog confirmar exclusão de recorrente */}
+      {deleteTarget && (
+        <DeleteRecurringDialog
+          session={deleteTarget}
+          date={format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy")}
+          onCancel={() => setDeleteTarget(null)}
+          onDeleteOne={handleDeleteOneDay}
+          onDeleteAll={handleDeleteAll}
+        />
+      )}
 
       {/* Dialog criar/editar */}
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>

@@ -1,0 +1,19 @@
+{
+  "name": "Holiday",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do feriado (yyyy-MM-dd)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Nome do feriado (opcional)",
+      "default": "Feriado"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

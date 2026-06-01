@@ -67,6 +67,13 @@ export default function Schedule() {
   const userCredits = userData?.credits ?? 0;
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
+  const { data: holidayData = [] } = useQuery({
+    queryKey: ["holidays", selectedDate],
+    queryFn: () => base44.entities.Holiday.filter({ date: selectedDate }),
+    staleTime: 0,
+  });
+  const isHoliday = holidayData.length > 0;
+
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ["sessions", selectedDay, selectedDate],
     queryFn: async () => {
@@ -74,9 +81,10 @@ export default function Schedule() {
         base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true, is_recurring: true }),
         base44.entities.ClassSession.filter({ date: selectedDate, is_active: true, is_recurring: false }),
       ]);
-      // Filtrar sessões "feriado"
-      return [...recurring, ...oneOff];
+      // Filtrar cancelled_dates
+      return [...recurring.filter(s => !s.cancelled_dates?.includes(selectedDate)), ...oneOff];
     },
+    enabled: !isHoliday,
   });
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
@@ -359,10 +367,6 @@ export default function Schedule() {
 
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
 
-  // Verificar se é feriado
-  const isHoliday = sortedSessions.length === 1 && sortedSessions[0]?.notes?.toLowerCase().includes("feriado");
-  const holidaySession = sortedSessions.find(s => s.is_active === false || (s.notes && s.notes.toLowerCase().includes("feriado")));
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 font-body">
       <div className="mb-6">
@@ -403,6 +407,12 @@ export default function Schedule() {
       <div className="space-y-3 mt-4">
         {loadingSessions || loadingBookings ? (
           Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
+        ) : isHoliday ? (
+          <div className="text-center py-16 rounded-2xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-800">
+            <span className="text-5xl">🎉</span>
+            <p className="font-heading font-bold text-amber-700 dark:text-amber-400 mt-4 text-lg">Feriado!</p>
+            <p className="text-sm text-amber-600/80 mt-1">Não há aulas neste dia. Aproveite o descanso! 🌸</p>
+          </div>
         ) : sortedSessions.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <CalendarDays className="h-10 w-10 mx-auto mb-4 opacity-30" />
