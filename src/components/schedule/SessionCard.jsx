@@ -22,6 +22,7 @@ function isPast(sessionDate, sessionTime) {
 export default function SessionCard({
   session, sessionDate, bookingCount, sessionBookings = [], sessionWaitlist = [],
   isBooked, waitlistPosition, onBook, onCancel, onJoinWaitlist, onLeaveWaitlist, isLoading,
+  hasCredits = true,
 }) {
   const [expanded, setExpanded] = useState(false);
   const spotsLeft = (session.max_students || 8) - bookingCount;
@@ -112,6 +113,8 @@ export default function SessionCard({
                   {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Fila de espera"}
                 </Button>
               )
+            ) : !hasCredits ? (
+              <span className="text-xs text-red-500 font-medium text-center">Sem créditos</span>
             ) : (
               <Button
                 size="sm"

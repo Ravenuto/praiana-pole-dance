@@ -31,6 +31,19 @@
         "type": "string"
       },
       "description": "Lista de emails que curtiram"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL de imagem ou v\u00eddeo anexado"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "default": "image",
+      "description": "Tipo da m\u00eddia"
     }
   },
   "required": [

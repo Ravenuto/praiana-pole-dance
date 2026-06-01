@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Loader2, Megaphone, BarChart2 } from "lucide-react";
+import { Plus, Loader2, Megaphone, BarChart2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence } from "framer-motion";
 import NoticeCard from "@/components/notices/NoticeCard";
 import PollCard from "@/components/notices/PollCard";
 import NewPollForm from "@/components/notices/NewPollForm";
 
-const emptyForm = { title: "", content: "", pinned: false, color: "blue" };
+const emptyForm = { title: "", content: "", pinned: false, color: "blue", media_url: "", media_type: "image" };
 
 export default function Notices() {
   const { user } = useAuth();
@@ -24,6 +24,7 @@ export default function Notices() {
   const [openPoll, setOpenPoll] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const { data: notices = [], isLoading: loadingNotices } = useQuery({
     queryKey: ["notices"],
@@ -50,10 +51,22 @@ export default function Notices() {
     return b.date - a.date;
   });
 
+  const handleUploadMedia = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMedia(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const isVideo = file.type.startsWith("video/");
+    setForm((f) => ({ ...f, media_url: file_url, media_type: isVideo ? "video" : "image" }));
+    setUploadingMedia(false);
+  };
+
   const handleSave = async () => {
     if (!form.title.trim() || !form.content.trim()) return toast.error("Preencha título e conteúdo");
     setSaving(true);
-    await base44.entities.Notice.create(form);
+    const payload = { ...form };
+    if (!payload.media_url) { delete payload.media_url; delete payload.media_type; }
+    await base44.entities.Notice.create(payload);
     queryClient.invalidateQueries({ queryKey: ["notices"] });
     setOpenNotice(false);
     setForm(emptyForm);
@@ -122,6 +135,30 @@ export default function Notices() {
                       className="min-h-[100px]"
                     />
                   </div>
+                  {/* Upload de mídia */}
+                  <div>
+                    <Label>Imagem ou Vídeo (opcional)</Label>
+                    <label className="mt-1 flex items-center gap-2 cursor-pointer border border-dashed border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                      <ImagePlus className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        {uploadingMedia ? "Enviando..." : form.media_url ? "Trocar arquivo" : "Clique para adicionar"}
+                      </span>
+                      <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUploadMedia} disabled={uploadingMedia} />
+                    </label>
+                    {form.media_url && !uploadingMedia && (
+                      <div className="mt-2 relative rounded-lg overflow-hidden">
+                        {form.media_type === "video"
+                          ? <video src={form.media_url} className="w-full max-h-40 object-cover rounded-lg" />
+                          : <img src={form.media_url} alt="preview" className="w-full max-h-40 object-cover rounded-lg" />
+                        }
+                        <button
+                          onClick={() => setForm((f) => ({ ...f, media_url: "", media_type: "image" }))}
+                          className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                        >✕</button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -133,7 +170,7 @@ export default function Notices() {
                       <span className="text-sm">Fixar no topo</span>
                     </label>
                   </div>
-                  <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
+                  <Button onClick={handleSave} disabled={saving || uploadingMedia} className="w-full rounded-full">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publicar Recado"}
                   </Button>
                 </div>

@@ -100,7 +100,7 @@ export default function PostCard({ post, currentUser, onDelete }) {
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <MessageCircle className="h-5 w-5" />
-            {comments.length > 0 && !showComments && <span>{comments.length}</span>}
+            {comments.length > 0 && <span>{comments.length}</span>}
           </button>
         </div>
 

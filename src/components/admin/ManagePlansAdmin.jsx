@@ -12,9 +12,7 @@ import { Pencil, Plus, Star, Trash2, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner";
 
 const EMPTY = {
-  key: "", label: "", price: "", price_value: 0, per_class: "",
-  credits: 4, highlight: false, is_active: true, benefits: [""],
-  whatsapp_number: "5511999999999",
+  label: "", price_value: 0, credits: 1, highlight: false, is_active: true, benefits: [""],
 };
 
 export default function ManagePlansAdmin() {
@@ -29,8 +27,11 @@ export default function ManagePlansAdmin() {
 
   const sorted = [...plans].sort((a, b) => (a.credits || 0) - (b.credits || 0));
 
+  // Gera chave automática a partir do label
+  const autoKey = (label) => label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
   const openNew = () => setDialog({ form: { ...EMPTY, benefits: [""] } });
-  const openEdit = (plan) => setDialog({ plan, form: { ...plan, benefits: plan.benefits?.length ? [...plan.benefits] : [""] } });
+  const openEdit = (plan) => setDialog({ plan, form: { ...plan, key: plan.key || "", benefits: plan.benefits?.length ? [...plan.benefits] : [""] } });
   const closeDialog = () => setDialog(null);
 
   const setField = (field, value) =>
@@ -55,9 +56,16 @@ export default function ManagePlansAdmin() {
   const handleSave = async () => {
     if (!dialog) return;
     const { form, plan } = dialog;
-    if (!form.key || !form.label || !form.price) return toast.error("Preencha chave, nome e preço.");
+    if (!form.label || !form.price_value) return toast.error("Preencha nome e preço.");
     setSaving(true);
-    const data = { ...form, benefits: form.benefits.filter(Boolean) };
+    // Calcula campos derivados automaticamente
+    const credits = Number(form.credits) || 1;
+    const priceValue = Number(form.price_value) || 0;
+    const perClassValue = credits > 0 ? (priceValue / credits).toFixed(2).replace(".", ",") : priceValue.toFixed(2).replace(".", ",");
+    const per_class = credits === 1 ? "por aula" : `R$ ${perClassValue}/aula`;
+    const price = `R$ ${String(priceValue).replace(".", ",")}`;
+    const key = form.key || autoKey(form.label) || `plano_${Date.now()}`;
+    const data = { ...form, key, price, price_value: priceValue, per_class, credits, benefits: form.benefits.filter(Boolean) };
     if (plan?.id) {
       await base44.entities.StudioPlan.update(plan.id, data);
       toast.success("Plano atualizado!");
@@ -160,38 +168,41 @@ export default function ManagePlansAdmin() {
           </DialogHeader>
           {dialog && (
             <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs mb-1 block">Chave única *</Label>
-                  <Input placeholder="ex: 4_aulas" value={dialog.form.key} onChange={(e) => setField("key", e.target.value)} className="h-8 text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs mb-1 block">Créditos (aulas) *</Label>
-                  <Input type="number" min={1} value={dialog.form.credits} onChange={(e) => setField("credits", Number(e.target.value))} className="h-8 text-sm" />
-                </div>
-              </div>
               <div>
                 <Label className="text-xs mb-1 block">Nome do plano *</Label>
                 <Input placeholder="ex: 8 aulas / mês" value={dialog.form.label} onChange={(e) => setField("label", e.target.value)} className="h-8 text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs mb-1 block">Preço exibido *</Label>
-                  <Input placeholder="ex: R$ 370" value={dialog.form.price} onChange={(e) => setField("price", e.target.value)} className="h-8 text-sm" />
+                  <Label className="text-xs mb-1 block">Preço (R$) *</Label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                    <Input
+                      type="number" min={0} step="0.01"
+                      placeholder="0"
+                      value={dialog.form.price_value || ""}
+                      onChange={(e) => setField("price_value", e.target.value)}
+                      className="h-8 text-sm pl-9"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label className="text-xs mb-1 block">Valor numérico</Label>
-                  <Input type="number" min={0} value={dialog.form.price_value} onChange={(e) => setField("price_value", Number(e.target.value))} className="h-8 text-sm" />
+                  <Label className="text-xs mb-1 block">Créditos (aulas) *</Label>
+                  <Input type="number" min={1} value={dialog.form.credits} onChange={(e) => setField("credits", Number(e.target.value))} className="h-8 text-sm" />
                 </div>
               </div>
-              <div>
-                <Label className="text-xs mb-1 block">Preço por aula</Label>
-                <Input placeholder="ex: R$ 46,25/aula" value={dialog.form.per_class} onChange={(e) => setField("per_class", e.target.value)} className="h-8 text-sm" />
-              </div>
-              <div>
-                <Label className="text-xs mb-1 block">WhatsApp (com código do país)</Label>
-                <Input placeholder="5511999999999" value={dialog.form.whatsapp_number} onChange={(e) => setField("whatsapp_number", e.target.value)} className="h-8 text-sm" />
-              </div>
+              {/* Preview automático do preço por aula */}
+              {dialog.form.price_value > 0 && dialog.form.credits >= 1 && (
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                  Preço por aula calculado automaticamente:{" "}
+                  <strong>
+                    {dialog.form.credits == 1
+                      ? "por aula"
+                      : `R$ ${(Number(dialog.form.price_value) / Number(dialog.form.credits)).toFixed(2).replace(".", ",")}/aula`
+                    }
+                  </strong>
+                </p>
+              )}
 
               <div>
                 <Label className="text-xs mb-2 block">Benefícios</Label>

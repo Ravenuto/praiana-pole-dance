@@ -76,6 +76,14 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
             )}
           </div>
           <p className="mt-2 text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{notice.content}</p>
+          {notice.media_url && (
+            <div className="mt-3 rounded-xl overflow-hidden">
+              {notice.media_type === "video"
+                ? <video src={notice.media_url} controls className="w-full max-h-72 object-cover bg-black" />
+                : <img src={notice.media_url} alt="mídia" className="w-full max-h-72 object-cover" />
+              }
+            </div>
+          )}
           <p className="mt-2 text-xs text-muted-foreground">{timeAgo}</p>
         </div>
         {isAdmin && (

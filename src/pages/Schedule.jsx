@@ -61,6 +61,17 @@ export default function Schedule() {
     enabled: !!user?.email,
   });
 
+  const { data: userData } = useQuery({
+    queryKey: ["myProfile", user?.email],
+    queryFn: async () => {
+      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      return u || null;
+    },
+    enabled: !!user?.email,
+  });
+  const userCredits = userData?.credits ?? user?.credits ?? 0;
+  const hasCredits = user?.role === "admin" || userCredits > 0;
+
   const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
   const bookingCountMap = useMemo(() => {
     const map = {};
@@ -225,6 +236,7 @@ export default function Schedule() {
               onJoinWaitlist={() => handleJoinWaitlist(session)}
               onLeaveWaitlist={() => handleLeaveWaitlist(session)}
               isLoading={loadingSession === session.id}
+              hasCredits={hasCredits}
             />
           ))
         )}
