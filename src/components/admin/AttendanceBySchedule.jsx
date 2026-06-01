@@ -64,8 +64,15 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   const selectedDate = dateOverride || getDateForDay(selectedDay);
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
-    queryKey: ["adminSessions", selectedDay],
-    queryFn: () => base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true }),
+    queryKey: ["adminSessions", selectedDay, selectedDate],
+    queryFn: async () => {
+      const all = await base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true });
+      // Filtra por data: remove aulas canceladas para este dia
+      return all.filter(s => {
+        if (s.cancelled_dates && s.cancelled_dates.includes(selectedDate)) return false;
+        return true;
+      });
+    },
   });
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
@@ -150,10 +157,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
           className="w-40 h-8 text-sm"
         />
       </div>
-      <p className="text-sm text-muted-foreground mb-4 capitalize">{formattedDate}</p>
+      <p className="text-xs text-muted-foreground mb-4 capitalize">{formattedDate}</p>
 
       {loadingSessions ? (
-        Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl mb-3" />)
+        Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl mb-3" />)
       ) : sortedSessions.length === 0 ? (
         <p className="text-center text-muted-foreground py-10">Nenhuma aula neste dia</p>
       ) : (
@@ -175,9 +182,12 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{session.class_type_name} — {session.time}</p>
-                      <p className="text-xs text-muted-foreground">{session.instructor || ""}</p>
-                    </div>
+                       <p className="font-medium text-sm">{session.class_type_name} — {session.time}</p>
+                       <p className="text-xs text-muted-foreground">{session.instructor || ""}</p>
+                       {session.session_overrides && session.session_overrides[selectedDate] && (
+                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">📝 {session.session_overrides[selectedDate].notes}</p>
+                       )}
+                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
                     <Badge className="bg-green-100 text-green-700 border-0 text-sm h-7 px-2.5 gap-1">
@@ -194,17 +204,17 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                   <div className="border-t border-border">
                     {/* Botões de chamada em lote — sempre visíveis */}
                     <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/20 border-b border-border">
-                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-green-700 border-green-300"
+                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-green-700 border-green-300"
                         onClick={() => handleMarkAll(session.id, "presente")}>
-                        <Check className="h-3 w-3" /> Todas presentes
+                        <Check className="h-3.5 w-3.5" /> Todas presentes
                       </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-destructive border-destructive/30"
+                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-destructive border-destructive/30"
                         onClick={() => handleMarkAll(session.id, "faltou")}>
-                        <X className="h-3 w-3" /> Todas faltaram
+                        <X className="h-3.5 w-3.5" /> Todas faltaram
                       </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-primary border-primary/30"
+                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-primary border-primary/30"
                         onClick={() => { setAddStudentDialog({ session }); setAddStudentForm({ name: "", isAvulsa: false }); }}>
-                        <UserPlus className="h-3 w-3" /> Adicionar aluna
+                        <UserPlus className="h-3.5 w-3.5" /> Adicionar aluna
                       </Button>
                     </div>
                     {sessionBookings.length === 0 ? (
@@ -224,11 +234,11 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                             return (
                               <div key={booking.id} className="flex items-center justify-between gap-3 px-4 py-3">
                                 <div className="min-w-0">
-                                  <p className="font-medium text-sm truncate">{booking.student_name || "—"}</p>
-                                  <p className="text-xs text-muted-foreground truncate">{booking.student_email}</p>
-                                </div>
-                                <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
-                                  <SelectTrigger className="w-32 h-7 text-xs">
+                                   <p className="font-medium text-xs truncate">{booking.student_name || "—"}</p>
+                                   <p className="text-[11px] text-muted-foreground truncate">{booking.student_email}</p>
+                                 </div>
+                                 <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
+                                   <SelectTrigger className="w-32 h-8 text-[11px]">
                                     <Badge className={`${statusOpt.cls} border-0 text-xs`}>{statusOpt.label}</Badge>
                                   </SelectTrigger>
                                   <SelectContent>

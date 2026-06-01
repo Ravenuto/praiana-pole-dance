@@ -59,6 +59,10 @@
         "type": "string"
       },
       "description": "Datas canceladas para aulas recorrentes (yyyy-MM-dd)"
+    },
+    "session_overrides": {
+      "type": "object",
+      "description": "Observa\u00e7\u00f5es espec\u00edficas por data (ex: {'2026-06-01': {'notes': 'Com salto'}})"
     }
   },
   "required": [
