@@ -13,7 +13,7 @@
     "date": {
       "type": "string",
       "format": "date",
-      "description": "Data da aula"
+      "description": "Data espec\u00edfica (para aulas \u00fanicas)"
     },
     "time": {
       "type": "string",

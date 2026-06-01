@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, User, Check, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Users, Check, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function isWithin4Hours(sessionDate, sessionTime) {
@@ -47,13 +47,12 @@ export default function SessionCard({
               </div>
               <div className="min-w-0">
                 <h3 className="font-heading text-base font-semibold truncate">{session.class_type_name}</h3>
-                <p className="text-sm text-muted-foreground">{session.time}</p>
+                <p className="text-sm text-muted-foreground">
+                  {session.time}{session.instructor && <span className="ml-2 text-muted-foreground/70">· {session.instructor}</span>}
+                </p>
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {session.instructor && (
-                <span className="flex items-center gap-1"><User className="h-3 w-3" /> {session.instructor}</span>
-              )}
               <span className={`flex items-center gap-1 ${isFull ? "text-destructive font-medium" : ""}`}>
                 <Users className="h-3 w-3" /> {bookingCount}/{session.max_students || 8}
                 {isFull ? " — Lotada" : ` — ${spotsLeft} vaga${spotsLeft !== 1 ? "s" : ""}`}

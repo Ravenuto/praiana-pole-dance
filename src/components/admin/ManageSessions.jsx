@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Clock } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Clock, User } from "lucide-react";
 import { toast } from "sonner";
 import DaySelector, { DAYS } from "@/components/schedule/DaySelector";
 
-const emptyForm = { class_type_id: "", class_type_name: "", day_of_week: "segunda", time: "09:00", instructor: "", max_students: 8, notes: "" };
+const emptyForm = { class_type_id: "", class_type_name: "", day_of_week: "segunda", time: "09:00", instructor: "", max_students: 8, notes: "", session_type: "weekly", specific_date: "" };
 
 export default function ManageSessions() {
   const queryClient = useQueryClient();
@@ -20,6 +20,8 @@ export default function ManageSessions() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [filterDay, setFilterDay] = useState("segunda");
+  const [editInstructorId, setEditInstructorId] = useState(null);
+  const [tempInstructor, setTempInstructor] = useState("");
 
   const { data: classTypes = [] } = useQuery({
     queryKey: ["classTypes"],
@@ -32,7 +34,7 @@ export default function ManageSessions() {
   });
 
   const filteredSessions = sessions
-    .filter((s) => s.day_of_week === filterDay)
+    .filter((s) => s.day_of_week === filterDay || (!s.is_recurring && s.day_of_week === filterDay))
     .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
 
   const handleClassTypeChange = (ctId) => {
@@ -42,9 +44,17 @@ export default function ManageSessions() {
 
   const handleSave = async () => {
     if (!form.class_type_id || !form.time) return toast.error("Preencha modalidade e horário");
+    if (form.session_type === "once" && !form.specific_date) return toast.error("Informe a data da aula única");
     setSaving(true);
     try {
-      const data = { ...form, is_active: true, is_recurring: true };
+      const isRecurring = form.session_type !== "once";
+      const data = { ...form, is_active: true, is_recurring: isRecurring };
+      if (!isRecurring) {
+        // Para aula única, calculamos o day_of_week a partir da data
+        const dayNames = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+        data.day_of_week = dayNames[new Date(form.specific_date + "T12:00:00").getDay()];
+        data.date = form.specific_date;
+      }
       if (editingId) {
         await base44.entities.ClassSession.update(editingId, data);
         toast.success("Horário atualizado");
@@ -72,6 +82,8 @@ export default function ManageSessions() {
       instructor: s.instructor || "",
       max_students: s.max_students || 8,
       notes: s.notes || "",
+      session_type: s.is_recurring === false ? "once" : "weekly",
+      specific_date: s.date || "",
     });
     setEditingId(s.id);
     setOpen(true);
@@ -83,6 +95,14 @@ export default function ManageSessions() {
     queryClient.invalidateQueries({ queryKey: ["allSessions"] });
     queryClient.invalidateQueries({ queryKey: ["sessions"] });
     toast.success("Horário excluído");
+  };
+
+  const handleSaveInstructor = async (sessionId) => {
+    await base44.entities.ClassSession.update(sessionId, { instructor: tempInstructor });
+    queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+    queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    setEditInstructorId(null);
+    toast.success("Instrutora atualizada");
   };
 
   const dayLabel = DAYS.find((d) => d.key === filterDay)?.full || filterDay;
@@ -102,6 +122,23 @@ export default function ManageSessions() {
               <DialogTitle className="font-heading">{editingId ? "Editar" : "Novo"} Horário</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
+              {/* Tipo: semanal ou única */}
+              <div>
+                <Label>Tipo de Aula *</Label>
+                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                  {[{ v: "weekly", label: "Semanal (grade fixa)" }, { v: "once", label: "Aula única (reposição)" }].map(({ v, label }) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setForm({ ...form, session_type: v })}
+                      className={`rounded-lg border px-3 py-2 text-sm text-left transition-colors ${form.session_type === v ? "border-primary bg-primary/10 text-primary font-medium" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <Label>Modalidade *</Label>
                 <Select value={form.class_type_id} onValueChange={handleClassTypeChange}>
@@ -113,6 +150,8 @@ export default function ManageSessions() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {form.session_type === "weekly" ? (
               <div>
                 <Label>Dia da Semana *</Label>
                 <Select value={form.day_of_week} onValueChange={(v) => setForm({ ...form, day_of_week: v })}>
@@ -124,6 +163,12 @@ export default function ManageSessions() {
                   </SelectContent>
                 </Select>
               </div>
+              ) : (
+              <div>
+                <Label>Data da Aula *</Label>
+                <Input type="date" value={form.specific_date} onChange={(e) => setForm({ ...form, specific_date: e.target.value })} />
+              </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Horário *</Label>
@@ -158,26 +203,57 @@ export default function ManageSessions() {
         ) : (
           filteredSessions.map((s) => (
             <Card key={s.id}>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-primary" />
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Clock className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium">{s.class_type_name} — {s.time}</p>
+                        {!s.is_recurring && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Aula única{s.date ? ` · ${s.date}` : ""}</span>
+                        )}
+                      </div>
+                      {/* Instrutora com edição inline */}
+                      {editInstructorId === s.id ? (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Input
+                            autoFocus
+                            value={tempInstructor}
+                            onChange={(e) => setTempInstructor(e.target.value)}
+                            className="h-7 text-xs w-36"
+                            placeholder="Nome da instrutora"
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveInstructor(s.id); if (e.key === "Escape") setEditInstructorId(null); }}
+                          />
+                          <Button size="sm" className="h-7 text-xs px-2" onClick={() => handleSaveInstructor(s.id)}>Ok</Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setEditInstructorId(null)}>✕</Button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setEditInstructorId(s.id); setTempInstructor(s.instructor || ""); }}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
+                          title="Clique para alterar instrutora"
+                        >
+                          <User className="h-3 w-3" />
+                          {s.instructor || <span className="italic">Sem instrutora</span>}
+                          <Pencil className="h-2.5 w-2.5 opacity-50" />
+                        </button>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Até {s.max_students || 8} alunas{s.notes && ` · ${s.notes}`}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{s.class_type_name} — {s.time}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {s.instructor && `${s.instructor} · `}Até {s.max_students || 8} alunas
-                      {s.notes && ` · ${s.notes}`}
-                    </p>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(s)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(s)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>

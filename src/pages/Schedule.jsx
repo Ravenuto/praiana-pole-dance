@@ -35,8 +35,15 @@ export default function Schedule() {
   const selectedDate = useMemo(() => getDateForDay(selectedDay), [selectedDay]);
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
-    queryKey: ["sessions", selectedDay],
-    queryFn: () => base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true }),
+    queryKey: ["sessions", selectedDay, selectedDate],
+    queryFn: async () => {
+      // Busca aulas recorrentes do dia da semana + aulas únicas da data específica
+      const [recurring, oneOff] = await Promise.all([
+        base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true, is_recurring: true }),
+        base44.entities.ClassSession.filter({ date: selectedDate, is_active: true, is_recurring: false }),
+      ]);
+      return [...recurring, ...oneOff];
+    },
   });
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
@@ -70,6 +77,12 @@ export default function Schedule() {
     enabled: !!user?.email,
   });
   const userCredits = userData?.credits ?? user?.credits ?? 0;
+  // Conta quantas reservas ativas a aluna tem hoje (para limitar pelo plano)
+  const { data: myActiveBookingsToday = [] } = useQuery({
+    queryKey: ["myActiveBookingsToday", user?.email],
+    queryFn: () => base44.entities.Booking.filter({ student_email: user?.email, status: "confirmada" }, "-session_date", 200),
+    enabled: !!user?.email,
+  });
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
@@ -129,7 +142,12 @@ export default function Schedule() {
         student_email: user?.email,
         status: "confirmada",
       });
-      if (userData?.id && currentCredits > 0) {
+      if (userData?.id) {
+        if (currentCredits <= 0) {
+          toast.error("Você não tem créditos disponíveis");
+          setLoadingSession(null);
+          return;
+        }
         await base44.entities.User.update(userData.id, { credits: currentCredits - 1 });
       }
       invalidate();

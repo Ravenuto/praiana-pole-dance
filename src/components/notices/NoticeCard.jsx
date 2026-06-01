@@ -109,14 +109,14 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
           }`}
         >
           <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
-          <span>{likes.length > 0 ? likes.length : ""} Curtir</span>
+          {likes.length > 0 && <span>{likes.length}</span>}
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
           className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <MessageCircle className="h-4 w-4" />
-          <span>{comments.length > 0 && showComments ? comments.length : ""} Comentar</span>
+          {comments.length > 0 && <span>{comments.length}</span>}
         </button>
       </div>
 
