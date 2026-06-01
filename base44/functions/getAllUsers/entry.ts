@@ -13,17 +13,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Usa asServiceRole para listar TODOS os usuários, inclusive os desabilitados
+    // Listar usuários ativados
     const allUsers = await base44.asServiceRole.entities.User.list();
     
-    // Log para debug
-    console.log(`Total de usuários retornados: ${allUsers.length}`);
-    allUsers.forEach(u => {
-      console.log(`- ${u.email} (${u.role}) - disabled: ${u.disabled}`);
-    });
+    // Listar todos os convites
+    const allInvitations = await base44.asServiceRole.entities.StudentInvitation.list();
+    const invitations = allInvitations.filter(inv => inv.status === "pending");
 
-    return Response.json({ users: allUsers });
+    console.log(`Total de usuários: ${allUsers.length}`);
+    console.log(`Total de convites pendentes: ${invitations.length}`);
+
+    // Combinar usuários e convites
+    const combinedUsers = [
+      ...allUsers,
+      ...invitations.map(inv => ({
+        id: inv.id,
+        email: inv.email,
+        full_name: inv.full_name || inv.email,
+        role: inv.role || 'user',
+        is_invited: true,
+        created_date: inv.invited_date || inv.created_date
+      }))
+    ];
+
+    return Response.json({ users: combinedUsers });
   } catch (error) {
+    console.error('Erro em getAllUsers:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

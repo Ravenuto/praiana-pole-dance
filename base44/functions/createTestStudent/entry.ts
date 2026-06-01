@@ -11,13 +11,24 @@ Deno.serve(async (req) => {
     const testEmail = `aluna.teste.${Date.now()}@praiana.app`;
     
     // Convidar o usuário com role "user"
-    const newUser = await base44.asServiceRole.users.inviteUser(testEmail, "user");
+    await base44.users.inviteUser(testEmail, "user");
+    
+    // Registrar também na entidade StudentInvitation para rastreamento
+    const invitation = await base44.asServiceRole.entities.StudentInvitation.create({
+      email: testEmail,
+      full_name: "Aluna Teste",
+      role: "user",
+      plan: "4_aulas",
+      credits: 4,
+      status: "pending",
+      invited_date: new Date().toISOString()
+    });
     
     return Response.json({ 
       success: true, 
       message: `✅ Aluna teste criada com sucesso!`,
       email: testEmail,
-      userId: newUser.id
+      userId: invitation.id
     });
 
   } catch (error) {
