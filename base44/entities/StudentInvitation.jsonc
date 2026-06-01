@@ -1,0 +1,49 @@
+{
+  "name": "StudentInvitation",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email da aluna convidada"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Nome da aluna"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin"
+      ],
+      "default": "user",
+      "description": "Papel da aluna no sistema"
+    },
+    "plan": {
+      "type": "string",
+      "description": "Plano inicial da aluna"
+    },
+    "credits": {
+      "type": "number",
+      "description": "Cr\u00e9ditos iniciais"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "activated",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Status do convite"
+    },
+    "invited_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data do convite"
+    }
+  },
+  "required": [
+    "email"
+  ]
+}
