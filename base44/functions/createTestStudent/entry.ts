@@ -18,11 +18,18 @@ Deno.serve(async (req) => {
     await base44.users.inviteUser("aluna.teste@praiana.app", "user");
 
     // Wait for user to be created
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
 
-    // Get the created user
-    const users = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
-    const testUser = users[0];
+    // Get the created user - retry if needed
+    let testUser = null;
+    for (let i = 0; i < 3; i++) {
+      const users = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
+      if (users.length > 0) {
+        testUser = users[0];
+        break;
+      }
+      if (i < 2) await new Promise(r => setTimeout(r, 1500));
+    }
 
     if (testUser) {
       // Update with test data
