@@ -57,8 +57,10 @@ export default function SessionCard({
                 <Users className="h-3 w-3" /> {bookingCount}/{session.max_students || 8}
                 {isFull ? " — Lotada" : ` — ${spotsLeft} vaga${spotsLeft !== 1 ? "s" : ""}`}
               </span>
-              {(session.session_overrides && session.session_overrides[sessionDate]?.notes) && <Badge className="bg-blue-600 text-white border-0 text-[10px]">{session.session_overrides[sessionDate].notes}</Badge>}
-              {!session.session_overrides?.[sessionDate] && session.notes && <Badge className="bg-blue-600 text-white border-0 text-[10px]">{session.notes}</Badge>}
+              <div className="flex flex-col gap-1">
+                {session.notes && <Badge className="bg-blue-600 text-white border-0 text-[10px]">{session.notes}</Badge>}
+                {session.session_overrides && session.session_overrides[sessionDate]?.notes && <Badge className="bg-blue-600 text-white border-0 text-[10px]">{session.session_overrides[sessionDate].notes}</Badge>}
+              </div>
               {locked && !past && (
                 <span className="flex items-center gap-1 text-amber-600">
                   <AlertCircle className="h-3 w-3" /> Reservas encerradas
