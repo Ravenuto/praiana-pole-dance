@@ -42,6 +42,7 @@ export default function Schedule() {
       return u || null;
     },
     enabled: !!user?.email,
+    staleTime: 0, // Sempre buscar dados frescos do banco
   });
 
   // Data mínima e máxima baseadas no plano
@@ -62,7 +63,8 @@ export default function Schedule() {
     return true;
   };
 
-  const userCredits = userData?.credits ?? user?.credits ?? 0;
+  // Sempre usar userData do banco (mais atualizado que user do AuthContext)
+  const userCredits = userData?.credits ?? 0;
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
@@ -138,26 +140,30 @@ export default function Schedule() {
     queryClient.invalidateQueries({ queryKey: ["myWaitlist"] });
     queryClient.invalidateQueries({ queryKey: ["allWaitlist"] });
     queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    queryClient.invalidateQueries({ queryKey: ["creditBanner"] });
+    queryClient.invalidateQueries({ queryKey: ["allUsers"] });
   };
 
   const handleBook = async (session) => {
-    if (!hasCredits) {
-      toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
-      return;
-    }
-    if (!isDateAllowed(selectedDate)) {
-      toast.error("Esta data está fora do período do seu plano. Renove seu plano para continuar reservando!", { duration: 5000 });
-      return;
-    }
     setLoadingSession(session.id);
     try {
+      // Buscar créditos FRESCOS do banco antes de qualquer operação
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.credits || 0;
-      if (currentCredits <= 0 && user?.role !== "admin") {
-        toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
-        setLoadingSession(null);
-        return;
+      const currentCredits = latestUser?.credits ?? 0;
+
+      if (user?.role !== "admin") {
+        if (currentCredits <= 0) {
+          toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
+          setLoadingSession(null);
+          return;
+        }
+        if (!isDateAllowed(selectedDate)) {
+          toast.error("Esta data está fora do período do seu plano. Renove seu plano para continuar reservando!", { duration: 5000 });
+          setLoadingSession(null);
+          return;
+        }
       }
+
       await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
@@ -167,11 +173,14 @@ export default function Schedule() {
         student_email: user?.email,
         status: "confirmada",
       });
+
+      // Debitar crédito IMEDIATAMENTE após criar o booking
       if (latestUser?.id && user?.role !== "admin") {
         await base44.entities.User.update(latestUser.id, { credits: currentCredits - 1 });
       }
+
       invalidate();
-      toast.success("Aula reservada!");
+      toast.success(`Aula reservada! Créditos restantes: ${user?.role !== "admin" ? currentCredits - 1 : "∞"}`);
       // Notificar admins com data em formato brasileiro
       const dataBR = format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy");
       const admins = await base44.entities.User.filter({ role: "admin" });
@@ -185,8 +194,8 @@ export default function Schedule() {
           actor_name: user?.full_name || user?.email,
         });
       }
-    } catch {
-      toast.error("Erro ao reservar aula");
+    } catch (err) {
+      toast.error("Erro ao reservar aula: " + (err?.message || ""));
     }
     setLoadingSession(null);
   };
@@ -210,14 +219,16 @@ export default function Schedule() {
 
     setLoadingSession(session.id);
     try {
+      // Buscar créditos frescos do banco
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.credits || 0;
+      const currentCredits = latestUser?.credits ?? 0;
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
+      // Devolver crédito IMEDIATAMENTE após cancelar
       if (latestUser?.id && user?.role !== "admin") {
         await base44.entities.User.update(latestUser.id, { credits: currentCredits + 1 });
       }
       invalidate();
-      toast.success("Reserva cancelada e crédito devolvido!");
+      toast.success("Reserva cancelada! Crédito devolvido.");
       // Notificar admins com data em formato brasileiro
       const dataBR = format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy");
       const admins = await base44.entities.User.filter({ role: "admin" });
@@ -231,8 +242,8 @@ export default function Schedule() {
           actor_name: user?.full_name || user?.email,
         });
       }
-    } catch {
-      toast.error("Erro ao cancelar");
+    } catch (err) {
+      toast.error("Erro ao cancelar: " + (err?.message || ""));
     }
     setLoadingSession(null);
   };

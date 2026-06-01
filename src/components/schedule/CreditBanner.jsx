@@ -20,7 +20,8 @@ export default function CreditBanner() {
 
   if (!user || user.role === "admin") return null;
 
-  const credits = userData?.credits ?? user?.credits ?? 0;
+  // Usar APENAS userData do banco, nunca user do AuthContext (que pode estar desatualizado)
+  const credits = userData?.credits ?? 0;
   const planLabel = userData?.plan_label || userData?.plan || "Plano de aulas";
   const noCredits = credits <= 0;
 
