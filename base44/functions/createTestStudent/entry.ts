@@ -8,8 +8,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    // Check if already exists
+    const existing = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
+    if (existing.length > 0) {
+      return Response.json({ success: true, message: "Aluna teste já existe" });
+    }
+
     // Invite the test student
     await base44.users.inviteUser("aluna.teste@praiana.app", "user");
+
+    // Wait for user to be created
+    await new Promise(r => setTimeout(r, 2000));
 
     // Get the created user
     const users = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
@@ -18,10 +27,12 @@ Deno.serve(async (req) => {
     if (testUser) {
       // Update with test data
       await base44.asServiceRole.entities.User.update(testUser.id, {
+        full_name: "Aluna Teste",
         plan: "4_aulas",
         credits: 2,
         plan_start_date: "2026-05-15",
-        last_payment_date: "2026-05-15"
+        last_payment_date: "2026-05-15",
+        is_active: true
       });
     }
 

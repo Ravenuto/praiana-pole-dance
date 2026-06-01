@@ -29,7 +29,7 @@ export default function Home() {
               Pole Dance & Artes
             </div>
             <div className="flex justify-center mb-4">
-              <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/c2269a69d_Logo_PRAIANA.png" alt="Praiana Pole Dance" className="w-32 h-32 object-contain dark:bg-white dark:rounded-2xl dark:p-2 opacity-90 dark:opacity-100" />
+              <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/c2269a69d_Logo_PRAIANA.png" alt="Praiana Pole Dance" className="w-32 h-32 object-contain opacity-80" />
             </div>
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
               Praiana
@@ -133,7 +133,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border mt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center text-sm text-muted-foreground">
-          <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/c2269a69d_Logo_PRAIANA.png" alt="Praiana" className="w-12 h-12 object-contain mx-auto mb-2 dark:bg-white dark:rounded-xl dark:p-1 opacity-60 dark:opacity-100" />
+          <img src="https://media.base44.com/images/public/6a0b29752977eaee21c7da55/c2269a69d_Logo_PRAIANA.png" alt="Praiana" className="w-12 h-12 object-contain mx-auto mb-2 opacity-60" />
           <p className="font-heading text-lg font-semibold text-foreground mb-1">Praiana Pole Dance & Artes</p>
         </div>
       </footer>

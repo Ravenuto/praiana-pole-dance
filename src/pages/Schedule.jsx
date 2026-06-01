@@ -409,6 +409,7 @@ export default function Schedule() {
           Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : isHoliday ? (
           <div className="text-center py-16 rounded-2xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-800">
+            <span className="text-6xl block mb-2">🎉</span>
             <p className="font-heading font-bold text-amber-700 dark:text-amber-400 text-lg">Feriado!</p>
             <p className="text-sm text-amber-600/80 mt-2">Não teremos aula hoje. Aproveite para descansar 💙</p>
           </div>
