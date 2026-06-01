@@ -49,10 +49,12 @@ export default function ManageStudents() {
     setCreatingTestStudent(true);
     try {
       const response = await base44.functions.invoke("createTestStudent", {});
+      console.log("Response:", response);
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-      toast.success(`✅ Aluna teste criada! Email: ${response.data.email}`);
+      toast.success("✅ Aluna teste criada com sucesso!");
     } catch (error) {
-      toast.error(error.response?.data?.error || "Erro ao criar aluna teste");
+      console.error("Error:", error);
+      toast.error(error?.message || "Erro ao criar aluna teste");
     }
     setCreatingTestStudent(false);
   };
