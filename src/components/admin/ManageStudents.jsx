@@ -49,9 +49,11 @@ export default function ManageStudents() {
     setCreatingTestStudent(true);
     try {
       const response = await base44.functions.invoke("createTestStudent", {});
-      console.log("Response:", response);
-      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-      toast.success("✅ Aluna teste criada com sucesso!");
+      // Aguarda um pouco para o usuário ser persistido e depois recarrega a lista
+      await new Promise(r => setTimeout(r, 500));
+      const updatedUsers = await base44.entities.User.list();
+      queryClient.setQueryData(["allUsers"], updatedUsers);
+      toast.success(`✅ Aluna teste criada: ${response.data.email}`);
     } catch (error) {
       console.error("Error:", error);
       toast.error(error?.message || "Erro ao criar aluna teste");
