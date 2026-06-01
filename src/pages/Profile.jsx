@@ -178,11 +178,12 @@ export default function Profile() {
         {currentUser?.plan_start_date && (
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
-              <CalendarDays className="h-3 w-3" /> Início do plano
+              <CalendarDays className="h-3 w-3" /> Data da renovação
             </p>
             <p className="font-medium text-sm">
               {format(new Date(currentUser.plan_start_date + "T12:00:00"), "dd/MM/yyyy")}
             </p>
+            <p className="text-xs text-muted-foreground mt-1">Válido por 30 dias</p>
           </div>
         )}
         {currentUser?.last_payment_date && (
