@@ -36,7 +36,7 @@ export default function Home() {
               <span className="text-primary italic"> Pole Dance</span>
               <span className="block text-2xl sm:text-3xl font-normal text-muted-foreground mt-2">& Artes</span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">Seja muito bem vinda ao nosso estúdio! 
+            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
 
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
