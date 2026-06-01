@@ -48,7 +48,7 @@ export default function AttendanceBySchedule() {
   const [expandedSession, setExpandedSession] = useState(null);
   const [dateOverride, setDateOverride] = useState("");
   const [addStudentDialog, setAddStudentDialog] = useState(null); // { session }
-  const [addStudentForm, setAddStudentForm] = useState({ name: "", email: "" });
+  const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
   const [addingStudent, setAddingStudent] = useState(false);
 
   const selectedDate = dateOverride || getDateForDay(selectedDay);
@@ -89,25 +89,27 @@ export default function AttendanceBySchedule() {
   };
 
   const handleAddStudent = async () => {
-    if (!addStudentForm.email || !addStudentDialog) return toast.error("Email obrigatório");
+    if (!addStudentForm.name && !addStudentForm.isAvulsa) return toast.error("Nome obrigatório");
     setAddingStudent(true);
     try {
       const session = addStudentDialog.session;
+      const studentName = addStudentForm.isAvulsa ? "Avulsa" : addStudentForm.name;
+      const studentEmail = addStudentForm.isAvulsa ? `avulsa-${Date.now()}@praiana.app` : `manual-${addStudentForm.name.replace(/\s+/g, "").toLowerCase()}@praiana.app`;
       await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
         session_time: session.time,
         class_type_name: session.class_type_name,
-        student_name: addStudentForm.name,
-        student_email: addStudentForm.email,
+        student_name: studentName,
+        student_email: studentEmail,
         status: "confirmada",
       });
       queryClient.invalidateQueries({ queryKey: ["adminBookingsAtt"] });
-      toast.success("Aluna adicionada à aula!");
+      toast.success(addStudentForm.isAvulsa ? "Vaga avulsa adicionada!" : "Aluna adicionada à aula!");
       setAddStudentDialog(null);
-      setAddStudentForm({ name: "", email: "" });
+      setAddStudentForm({ name: "", isAvulsa: false });
     } catch {
-      toast.error("Erro ao adicionar aluna");
+      toast.error("Erro ao adicionar");
     }
     setAddingStudent(false);
   };
@@ -191,7 +193,7 @@ export default function AttendanceBySchedule() {
                         <X className="h-3 w-3" /> Todas faltaram
                       </Button>
                       <Button size="sm" variant="outline" className="text-xs h-7 gap-1 text-primary border-primary/30"
-                        onClick={() => { setAddStudentDialog({ session }); setAddStudentForm({ name: "", email: "" }); }}>
+                        onClick={() => { setAddStudentDialog({ session }); setAddStudentForm({ name: "", isAvulsa: false }); }}>
                         <UserPlus className="h-3 w-3" /> Adicionar aluna
                       </Button>
                     </div>
@@ -240,14 +242,29 @@ export default function AttendanceBySchedule() {
               {addStudentDialog.session.class_type_name} — {addStudentDialog.session.time} — {selectedDate}
             </div>
             <div className="space-y-3">
-              <div>
-                <Label className="text-xs mb-1 block">Nome</Label>
-                <Input value={addStudentForm.name} onChange={(e) => setAddStudentForm((f) => ({ ...f, name: e.target.value }))} className="h-8 text-sm" placeholder="Nome da aluna" />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setAddStudentForm(f => ({ ...f, isAvulsa: false }))}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${!addStudentForm.isAvulsa ? "bg-primary text-white border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                >
+                  Nome da aluna
+                </button>
+                <button
+                  onClick={() => setAddStudentForm(f => ({ ...f, isAvulsa: true, name: "" }))}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${addStudentForm.isAvulsa ? "bg-primary text-white border-primary" : "bg-muted text-muted-foreground border-border"}`}
+                >
+                  Avulsa
+                </button>
               </div>
-              <div>
-                <Label className="text-xs mb-1 block">Email *</Label>
-                <Input value={addStudentForm.email} onChange={(e) => setAddStudentForm((f) => ({ ...f, email: e.target.value }))} className="h-8 text-sm" placeholder="email@exemplo.com" />
-              </div>
+              {!addStudentForm.isAvulsa && (
+                <div>
+                  <Label className="text-xs mb-1 block">Nome</Label>
+                  <Input value={addStudentForm.name} onChange={(e) => setAddStudentForm((f) => ({ ...f, name: e.target.value }))} className="h-8 text-sm" placeholder="Nome da aluna" />
+                </div>
+              )}
+              {addStudentForm.isAvulsa && (
+                <p className="text-sm text-muted-foreground text-center py-2">Uma vaga "Avulsa" será reservada nesta aula.</p>
+              )}
               <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full rounded-full">
                 {addingStudent ? <Loader2 className="h-4 w-4 animate-spin" /> : "Adicionar"}
               </Button>

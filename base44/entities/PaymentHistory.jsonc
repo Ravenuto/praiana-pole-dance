@@ -1,0 +1,39 @@
+{
+  "name": "PaymentHistory",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID da aluna"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email da aluna"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nome da aluna"
+    },
+    "plan_name": {
+      "type": "string",
+      "description": "Nome do plano pago"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor pago"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do pagamento"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o pagamento"
+    }
+  },
+  "required": [
+    "user_id",
+    "payment_date"
+  ]
+}

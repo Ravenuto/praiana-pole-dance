@@ -2,6 +2,43 @@
   "name": "User",
   "type": "object",
   "properties": {
+    "phone": {
+      "type": "string",
+      "description": "N\u00famero de telefone/WhatsApp da aluna"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de nascimento da aluna"
+    },
+    "plan": {
+      "type": "string",
+      "description": "Plano atual da aluna (ex: 4_aulas, 8_aulas)"
+    },
+    "credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Cr\u00e9ditos de aula restantes"
+    },
+    "plan_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de in\u00edcio do plano atual"
+    },
+    "last_payment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do \u00faltimo pagamento do plano"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a aluna est\u00e1 ativa no est\u00fadio"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre a aluna"
+    },
     "role": {
       "type": "string",
       "enum": [
@@ -9,48 +46,6 @@
         "user"
       ],
       "default": "user"
-    },
-    "plan": {
-      "type": "string",
-      "enum": [
-        "4_aulas",
-        "8_aulas",
-        "12_aulas",
-        "avulsa"
-      ],
-      "default": "4_aulas"
-    },
-    "credits": {
-      "type": "number",
-      "default": 4,
-      "description": "Cr\u00e9ditos de aulas dispon\u00edveis"
-    },
-    "is_active": {
-      "type": "boolean",
-      "default": true,
-      "description": "Se a aluna est\u00e1 ativa no est\u00fadio"
-    },
-    "plan_start_date": {
-      "type": "string",
-      "format": "date",
-      "description": "Data de in\u00edcio do plano atual"
-    },
-    "phone": {
-      "type": "string",
-      "description": "Telefone / WhatsApp da aluna"
-    },
-    "birth_date": {
-      "type": "string",
-      "format": "date",
-      "description": "Data de nascimento"
-    },
-    "notes": {
-      "type": "string",
-      "description": "Observa\u00e7\u00f5es sobre a aluna"
-    },
-    "avatar_url": {
-      "type": "string",
-      "description": "URL da foto de perfil"
     }
   }
 }

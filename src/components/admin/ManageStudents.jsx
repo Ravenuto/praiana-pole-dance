@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserPlus, Mail, Loader2, Plus, Minus, Pencil, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { UserPlus, Mail, Loader2, Plus, Minus, Pencil, Search, ChevronDown, ChevronUp, History, Send } from "lucide-react";
+import PaymentHistoryDialog from "@/components/admin/PaymentHistoryDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -40,6 +41,8 @@ export default function ManageStudents() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todas");
   const [expandedId, setExpandedId] = useState(null);
+  const [paymentDialog, setPaymentDialog] = useState(null);
+  const [sendingWelcome, setSendingWelcome] = useState(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["allUsers"],
@@ -129,6 +132,20 @@ export default function ManageStudents() {
     await base44.entities.User.update(student.id, { is_active: student.is_active === false ? true : false });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     toast.success(student.is_active === false ? "Aluna reativada" : "Aluna desativada");
+  };
+
+  const handleSendWelcomeEmail = async (student) => {
+    setSendingWelcome(student.id);
+    try {
+      await base44.functions.invoke("sendWelcomeEmail", {
+        studentEmail: student.email,
+        studentName: student.full_name || "",
+      });
+      toast.success("Email de boas-vindas enviado!");
+    } catch {
+      toast.error("Erro ao enviar email");
+    }
+    setSendingWelcome(null);
   };
 
   const handleSaveEdit = async () => {
@@ -269,6 +286,25 @@ export default function ManageStudents() {
                     >
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title="Histórico de pagamentos"
+                      onClick={() => setPaymentDialog(student)}
+                    >
+                      <History className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title="Enviar email de boas-vindas"
+                      onClick={() => handleSendWelcomeEmail(student)}
+                      disabled={sendingWelcome === student.id}
+                    >
+                      {sendingWelcome === student.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </Button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : student.id)}
                       className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted text-muted-foreground"
@@ -306,6 +342,14 @@ export default function ManageStudents() {
                       <p className="font-medium">
                         {student.plan_start_date
                           ? format(new Date(student.plan_start_date + "T12:00:00"), "dd/MM/yyyy")
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Último pagamento</p>
+                      <p className="font-medium">
+                        {student.last_payment_date
+                          ? format(new Date(student.last_payment_date + "T12:00:00"), "dd/MM/yyyy")
                           : "—"}
                       </p>
                     </div>
@@ -424,6 +468,11 @@ export default function ManageStudents() {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Dialog histórico de pagamentos */}
+      {paymentDialog && (
+        <PaymentHistoryDialog student={paymentDialog} onClose={() => setPaymentDialog(null)} />
       )}
 
       {/* Dialog editar detalhes */}
