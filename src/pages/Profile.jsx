@@ -29,10 +29,9 @@ export default function Profile() {
   const [form, setForm] = useState(null);
 
   const { data: userData, isLoading } = useQuery({
-    queryKey: ["myProfile", user?.email],
-    queryFn: () => base44.entities.User.filter({ email: user?.email }, "-created_date", 1),
-    enabled: !!user?.email,
-    select: (data) => data[0],
+    queryKey: ["myProfile"],
+    queryFn: () => base44.auth.me(),
+    enabled: !!user,
     onSuccess: (data) => {
       if (data && !form) {
         setForm({

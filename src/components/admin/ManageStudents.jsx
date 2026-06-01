@@ -90,6 +90,16 @@ export default function ManageStudents() {
     if (!inviteEmail.includes("@")) return toast.error("Email inválido");
     setInviting(true);
     try {
+      // Cria StudentInvitation com plano padrão
+      const defaultPlan = plans.find((p) => p.key === "4_aulas") || plans[0];
+      await base44.entities.StudentInvitation.create({
+        email: inviteEmail,
+        plan: defaultPlan?.key || "4_aulas",
+        credits: defaultPlan?.credits || 4,
+        status: "pending",
+        invited_date: new Date().toISOString(),
+      });
+      // Então convida o usuário
       await base44.users.inviteUser(inviteEmail, "user");
       setInviteEmail("");
       toast.success("Convite enviado para " + inviteEmail);
