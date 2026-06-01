@@ -46,18 +46,21 @@ export default function SessionCard({
                 <Clock className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-heading text-base font-semibold truncate">{session.class_type_name}</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-heading text-sm font-semibold truncate">{session.class_type_name}</h3>
+                <p className="text-xs text-muted-foreground">
                   {session.time}{session.instructor && <span className="ml-2 text-muted-foreground/70">· {session.instructor}</span>}
                 </p>
+                {session.session_overrides && session.session_overrides[sessionDate] && (
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">📝 {session.session_overrides[sessionDate].notes}</p>
+                )}
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
               <span className={`flex items-center gap-1 ${isFull ? "text-destructive font-medium" : ""}`}>
                 <Users className="h-3 w-3" /> {bookingCount}/{session.max_students || 8}
                 {isFull ? " — Lotada" : ` — ${spotsLeft} vaga${spotsLeft !== 1 ? "s" : ""}`}
               </span>
-              {session.notes && <Badge variant="secondary" className="text-xs">{session.notes}</Badge>}
+              {session.notes && <Badge variant="secondary" className="text-[10px]">{session.notes}</Badge>}
               {locked && !past && (
                 <span className="flex items-center gap-1 text-amber-600">
                   <AlertCircle className="h-3 w-3" /> Reservas encerradas

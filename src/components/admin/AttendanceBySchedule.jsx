@@ -48,15 +48,16 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   const [expandedSession, setExpandedSession] = useState(null);
   const [dateOverride, setDateOverride] = useState(initialDate);
 
-  // Sincronizar dia da semana se vier uma data inicial
+  // Sincronizar dia da semana com a data selecionada
   useEffect(() => {
-    if (initialDate) {
-      const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-      const d = new Date(initialDate + "T12:00:00");
+    const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+    const dateToUse = dateOverride || initialDate;
+    if (dateToUse) {
+      const d = new Date(dateToUse + "T12:00:00");
       setSelectedDay(days[d.getDay()]);
-      setDateOverride(initialDate);
+      if (!dateOverride) setDateOverride(dateToUse);
     }
-  }, [initialDate]);
+  }, [dateOverride, initialDate]);
   const [addStudentDialog, setAddStudentDialog] = useState(null); // { session }
   const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
   const [addingStudent, setAddingStudent] = useState(false);
@@ -142,7 +143,7 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
             <button
               key={d.key}
               onClick={() => { setSelectedDay(d.key); setDateOverride(""); }}
-              className={`px-2 py-1 text-xs rounded-lg font-medium transition-colors ${
+              className={`px-2.5 py-1 text-[11px] rounded-lg font-medium transition-colors ${
                 selectedDay === d.key && !dateOverride ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
@@ -150,14 +151,17 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
             </button>
           ))}
         </div>
-        <Input
-          type="date"
-          value={dateOverride}
-          onChange={(e) => { setDateOverride(e.target.value); }}
-          className="w-40 h-8 text-sm"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={dateOverride}
+            onChange={(e) => { setDateOverride(e.target.value); }}
+            className="w-32 h-8 text-[10px]"
+          />
+          {dateOverride && <span className="text-[10px] text-muted-foreground whitespace-nowrap">{format(new Date(dateOverride + "T12:00:00"), "dd/MM/yyyy")}</span>}
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground mb-4 capitalize">{formattedDate}</p>
+      <p className="text-[11px] text-muted-foreground mb-3 capitalize">{formattedDate}</p>
 
       {loadingSessions ? (
         Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl mb-3" />)
