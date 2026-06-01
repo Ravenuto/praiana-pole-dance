@@ -149,14 +149,14 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
               <button
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`flex flex-col items-center gap-0 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center h-12 w-12 rounded text-[10px] font-medium transition-colors ${
                   isSelected
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                <span className="capitalize leading-tight">{dayLabel}</span>
-                <span className="font-semibold text-[11px] leading-tight">{dayNum}</span>
+                <span className="capitalize leading-none">{dayLabel}</span>
+                <span className="font-semibold text-[11px] leading-none">{dayNum}</span>
               </button>
             );
           })}
