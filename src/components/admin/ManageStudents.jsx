@@ -104,8 +104,17 @@ export default function ManageStudents() {
     if (!manualForm.email.includes("@")) return toast.error("Email inválido");
     setSavingManual(true);
     try {
-      // Convida a aluna para criar a conta e já salva os dados extras no perfil
+      // Convida a aluna para criar a conta
       await base44.users.inviteUser(manualForm.email, "user");
+      // Cria registro de StudentInvitation com status "pending"
+      await base44.entities.StudentInvitation.create({
+        email: manualForm.email,
+        full_name: manualForm.name,
+        plan: manualForm.plan,
+        credits: manualForm.credits,
+        status: "pending",
+        invited_date: new Date().toISOString(),
+      });
       // Aguarda um pouco para o user ser criado, então busca e atualiza
       await new Promise(r => setTimeout(r, 1500));
       const users = await base44.entities.User.filter({ email: manualForm.email });
