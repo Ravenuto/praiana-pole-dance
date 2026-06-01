@@ -42,7 +42,7 @@ export default function Schedule() {
       return u || null;
     },
     enabled: !!user?.email,
-    staleTime: 0, // Sempre buscar dados frescos do banco
+    staleTime: 0 // Sempre buscar dados frescos do banco
   });
 
   // Data mínima e máxima baseadas no plano
@@ -70,7 +70,7 @@ export default function Schedule() {
   const { data: holidayData = [] } = useQuery({
     queryKey: ["holidays", selectedDate],
     queryFn: () => base44.entities.Holiday.filter({ date: selectedDate }),
-    staleTime: 0,
+    staleTime: 0
   });
   const isHoliday = holidayData.length > 0;
 
@@ -78,41 +78,41 @@ export default function Schedule() {
     queryKey: ["sessions", selectedDay, selectedDate],
     queryFn: async () => {
       const [recurring, oneOff] = await Promise.all([
-        base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true, is_recurring: true }),
-        base44.entities.ClassSession.filter({ date: selectedDate, is_active: true, is_recurring: false }),
-      ]);
+      base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true, is_recurring: true }),
+      base44.entities.ClassSession.filter({ date: selectedDate, is_active: true, is_recurring: false })]
+      );
       // Filtrar cancelled_dates
-      return [...recurring.filter(s => !s.cancelled_dates?.includes(selectedDate)), ...oneOff];
+      return [...recurring.filter((s) => !s.cancelled_dates?.includes(selectedDate)), ...oneOff];
     },
-    enabled: !isHoliday,
+    enabled: !isHoliday
   });
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
     queryKey: ["bookings", selectedDate],
-    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100),
+    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100)
   });
 
   const { data: allWaitlist = [] } = useQuery({
     queryKey: ["allWaitlist", selectedDate],
-    queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate }, "position", 100),
+    queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate }, "position", 100)
   });
 
   const { data: myBookings = [] } = useQuery({
     queryKey: ["myBookings", selectedDate, user?.email],
     queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, student_email: user?.email, status: "confirmada" }),
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   const { data: myWaitlist = [] } = useQuery({
     queryKey: ["myWaitlist", selectedDate, user?.email],
     queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate, student_email: user?.email }),
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
 
   const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
   const bookingCountMap = useMemo(() => {
     const map = {};
-    bookings.forEach((b) => { map[b.session_id] = (map[b.session_id] || 0) + 1; });
+    bookings.forEach((b) => {map[b.session_id] = (map[b.session_id] || 0) + 1;});
     return map;
   }, [bookings]);
   const bookingsBySession = useMemo(() => {
@@ -133,12 +133,12 @@ export default function Schedule() {
   }, [allWaitlist]);
   const myBookingMap = useMemo(() => {
     const map = {};
-    myBookings.forEach((b) => { map[b.session_id] = b; });
+    myBookings.forEach((b) => {map[b.session_id] = b;});
     return map;
   }, [myBookings]);
   const myWaitlistMap = useMemo(() => {
     const map = {};
-    myWaitlist.forEach((w) => { map[w.session_id] = w; });
+    myWaitlist.forEach((w) => {map[w.session_id] = w;});
     return map;
   }, [myWaitlist]);
 
@@ -179,7 +179,7 @@ export default function Schedule() {
         class_type_name: session.class_type_name,
         student_name: user?.full_name || "",
         student_email: user?.email,
-        status: "confirmada",
+        status: "confirmada"
       });
 
       // Debitar crédito IMEDIATAMENTE após criar o booking
@@ -199,7 +199,7 @@ export default function Schedule() {
           title: `${user?.full_name || user?.email} reservou uma aula`,
           message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
           link: `/admin?aba=presencas&data=${selectedDate}`,
-          actor_name: user?.full_name || user?.email,
+          actor_name: user?.full_name || user?.email
         });
       }
     } catch (err) {
@@ -247,7 +247,7 @@ export default function Schedule() {
           title: `${user?.full_name || user?.email} cancelou uma aula`,
           message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
           link: `/admin?aba=presencas&data=${selectedDate}`,
-          actor_name: user?.full_name || user?.email,
+          actor_name: user?.full_name || user?.email
         });
       }
     } catch (err) {
@@ -267,7 +267,7 @@ export default function Schedule() {
         class_type_name: session.class_type_name,
         student_name: user?.full_name || "",
         student_email: user?.email,
-        position: allWaiting.length + 1,
+        position: allWaiting.length + 1
       });
       invalidate();
       toast.success("Você entrou na fila de espera!");
@@ -320,9 +320,9 @@ export default function Schedule() {
           </button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 mb-1">
-          {dayNames.map((d) => (
-            <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
-          ))}
+          {dayNames.map((d) =>
+          <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
+          )}
         </div>
         <div className="grid grid-cols-7 gap-0.5">
           {days.map((day) => {
@@ -349,20 +349,20 @@ export default function Schedule() {
                   ${!isSelected && isToday ? "bg-primary/10 text-primary font-bold" : ""}
                   ${!isSelected && !isToday && allowed && isCurrentMonth ? "hover:bg-muted" : ""}
                   ${(!allowed || isPast) && !isSelected && isCurrentMonth ? "opacity-30 cursor-not-allowed" : ""}
-                `}
-              >
+                `}>
+                
                 {format(day, "d")}
-              </button>
-            );
+              </button>);
+
           })}
         </div>
-        {planDates.min && (
-          <p className="text-[10px] text-muted-foreground mt-2 text-center">
+        {planDates.min &&
+        <p className="text-[10px] text-muted-foreground mt-2 text-center">
             Plano válido: {format(new Date(planDates.min + "T12:00:00"), "dd/MM")} até {format(new Date(planDates.max + "T12:00:00"), "dd/MM")}
           </p>
-        )}
-      </div>
-    );
+        }
+      </div>);
+
   };
 
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
@@ -380,8 +380,8 @@ export default function Schedule() {
       <div className="relative mb-4">
         <button
           onClick={() => setCalendarOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-muted/40 border border-border hover:border-primary/50 transition-colors"
-        >
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-muted/40 border border-border hover:border-primary/50 transition-colors">
+          
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium capitalize">{formattedDate}</span>
@@ -389,58 +389,58 @@ export default function Schedule() {
           <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${calendarOpen ? "rotate-90" : ""}`} />
         </button>
 
-        {calendarOpen && (
-          <>
+        {calendarOpen &&
+        <>
             <div className="fixed inset-0 z-40" onClick={() => setCalendarOpen(false)} />
             {renderCalendar()}
           </>
-        )}
+        }
       </div>
 
       <DaySelector
         selectedDate={selectedDate}
         onSelectDate={(dateStr) => setSelectedDate(dateStr)}
         weekAnchor={weekAnchor}
-        onWeekChange={(newAnchor) => setWeekAnchor(newAnchor)}
-      />
+        onWeekChange={(newAnchor) => setWeekAnchor(newAnchor)} />
+      
 
       <div className="space-y-3 mt-4">
-        {loadingSessions || loadingBookings ? (
-          Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
-        ) : isHoliday ? (
-          <div className="text-center py-16 rounded-2xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-800">
+        {loadingSessions || loadingBookings ?
+        Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />) :
+        isHoliday ?
+        <div className="text-center py-16 rounded-2xl bg-amber-50 border border-amber-200 dark:bg-amber-900/10 dark:border-amber-800">
             <div className="flex justify-center mb-3">
-              <span className="text-6xl inline-block">🎉</span>
+              <span className="text-6xl inline-block px-3">🎉</span>
             </div>
             <p className="font-heading font-bold text-amber-700 dark:text-amber-400 text-lg">Feriado!</p>
             <p className="text-sm text-amber-600/80 mt-2">Não teremos aula hoje. Bom descanso 💙</p>
-          </div>
-        ) : sortedSessions.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
+          </div> :
+        sortedSessions.length === 0 ?
+        <div className="text-center py-16 text-muted-foreground">
             <CalendarDays className="h-10 w-10 mx-auto mb-4 opacity-30" />
             <p className="font-medium">Nenhuma aula neste dia</p>
-          </div>
-        ) : (
-          sortedSessions.map((session) => (
-            <SessionCard
-              key={session.id}
-              session={session}
-              sessionDate={selectedDate}
-              bookingCount={bookingCountMap[session.id] || 0}
-              sessionBookings={bookingsBySession[session.id] || []}
-              sessionWaitlist={waitlistBySession[session.id] || []}
-              isBooked={!!myBookingMap[session.id]}
-              waitlistPosition={myWaitlistMap[session.id]?.position ?? null}
-              onBook={() => handleBook(session)}
-              onCancel={() => handleCancel(session)}
-              onJoinWaitlist={() => handleJoinWaitlist(session)}
-              onLeaveWaitlist={() => handleLeaveWaitlist(session)}
-              isLoading={loadingSession === session.id}
-              hasCredits={hasCredits}
-            />
-          ))
-        )}
+          </div> :
+
+        sortedSessions.map((session) =>
+        <SessionCard
+          key={session.id}
+          session={session}
+          sessionDate={selectedDate}
+          bookingCount={bookingCountMap[session.id] || 0}
+          sessionBookings={bookingsBySession[session.id] || []}
+          sessionWaitlist={waitlistBySession[session.id] || []}
+          isBooked={!!myBookingMap[session.id]}
+          waitlistPosition={myWaitlistMap[session.id]?.position ?? null}
+          onBook={() => handleBook(session)}
+          onCancel={() => handleCancel(session)}
+          onJoinWaitlist={() => handleJoinWaitlist(session)}
+          onLeaveWaitlist={() => handleLeaveWaitlist(session)}
+          isLoading={loadingSession === session.id}
+          hasCredits={hasCredits} />
+
+        )
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
