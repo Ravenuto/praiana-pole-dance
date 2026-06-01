@@ -160,8 +160,8 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
         <div className="space-y-3">
           {sortedSessions.map((session) => {
             const sessionBookings = bookingsBySession[session.id] || [];
-            const confirmed = sessionBookings.filter((b) => b.status === "confirmada").length;
             const present = sessionBookings.filter((b) => b.status === "presente").length;
+            const activeCount = sessionBookings.filter((b) => b.status !== "cancelada").length;
             const isExpanded = expandedSession === session.id;
 
             return (
@@ -184,7 +184,7 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                       <Check className="h-3 w-3" />{present}
                     </Badge>
                     <Badge className="bg-primary/10 text-primary border-0 text-xs gap-1">
-                      <Users className="h-3 w-3" />{sessionBookings.length}
+                      <Users className="h-3 w-3" />{activeCount}
                     </Badge>
                     {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </div>

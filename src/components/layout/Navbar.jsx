@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import { useTheme } from "@/lib/ThemeContext";
+
 import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
-  Menu, X, LogOut, Sun, Moon,
+  Menu, X, LogOut,
   Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell } from
 "lucide-react";
 
@@ -17,7 +17,7 @@ const NAV_LINKS = [
 { to: "/recados", label: "Recados", icon: Megaphone },
 { to: "/feed", label: "Feed", icon: ImageIcon },
 { to: "/planos", label: "Planos", icon: CreditCard },
-{ to: "/notificacoes", label: "Notif.", icon: Bell },
+{ to: "/notificacoes", label: "Notif.", icon: Bell, hideInMobile: true },
 { to: "/perfil", label: "Perfil", icon: User }];
 
 
@@ -26,7 +26,6 @@ const ADMIN_LINK = { to: "/admin", label: "Admin", icon: ShieldCheck };
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
-  const { theme, toggle } = useTheme();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
   const unreadCount = useUnreadCount(user?.email);
@@ -74,9 +73,6 @@ export default function Navbar() {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground" title="Alternar tema">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
             <span className="text-xs text-muted-foreground font-body truncate max-w-32 ml-1">
               {user?.full_name || user?.email}
             </span>
@@ -87,9 +83,6 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <div className="flex items-center gap-1 md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
             {/* Sino fora do menu mobile */}
             <Link to="/notificacoes" className="relative p-2">
               <Bell className="h-5 w-5 text-muted-foreground" />
@@ -109,11 +102,10 @@ export default function Navbar() {
         {mobileOpen &&
         <div className="md:hidden pb-4 pt-2">
             <div className="grid grid-cols-4 gap-1.5 mb-3">
-              {links.map((link) => {
+              {links.filter(l => !l.hideInMobile).map((link) => {
               const Icon = link.icon;
               const active = isActive(link.to);
               const adminLink = link.to === "/admin";
-              const isNotif = link.to === "/notificacoes";
               return (
                 <Link
                   key={link.to}
@@ -123,16 +115,11 @@ export default function Navbar() {
                   active ?
                   "bg-primary/10 text-primary" :
                   adminLink ?
-                  "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100" :
+                  "bg-amber-50 text-amber-700 hover:bg-amber-100" :
                   "text-muted-foreground hover:text-foreground hover:bg-muted"}`
                   }>
                     <Icon className="h-5 w-5" />
                     <span className="text-[10px] font-medium leading-tight">{link.label}</span>
-                    {isNotif && unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
                   </Link>);
 
             })}
