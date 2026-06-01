@@ -135,11 +135,11 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Navegação da semana */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-2 hover:bg-muted rounded-lg transition-colors">
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1 hover:bg-muted rounded transition-colors">
+          <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {weekDays.map((day) => {
             const dateStr = format(day, "yyyy-MM-dd");
             const isSelected = dateStr === selectedDate;
@@ -149,30 +149,30 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
               <button
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`flex flex-col items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[9px] font-medium transition-colors ${
                   isSelected
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                <span className="capitalize text-[10px]">{dayLabel}</span>
-                <span className="font-semibold">{dayNum}</span>
+                <span className="capitalize">{dayLabel}</span>
+                <span className="font-semibold text-[10px]">{dayNum}</span>
               </button>
             );
           })}
         </div>
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-2 hover:bg-muted rounded-lg transition-colors">
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1 hover:bg-muted rounded transition-colors">
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       </div>
-      <p className="text-xs text-muted-foreground mb-4 capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+      <p className="text-[10px] text-muted-foreground mb-3 capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
 
       {loadingSessions ? (
-        Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl mb-3" />)
+        Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg mb-1.5" />)
       ) : sortedSessions.length === 0 ? (
-        <p className="text-center text-muted-foreground py-10">Nenhuma aula neste dia</p>
+        <p className="text-center text-muted-foreground py-4 text-xs">Nenhuma aula neste dia</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {sortedSessions.map((session) => {
             const sessionBookings = bookingsBySession[session.id] || [];
             const present = sessionBookings.filter((b) => b.status === "presente").length;
@@ -180,57 +180,53 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
             const isExpanded = expandedSession === session.id;
 
             return (
-              <div key={session.id} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div key={session.id} className="rounded-lg border border-border bg-card overflow-hidden">
                 <button
-                  className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between gap-2 p-2 text-left hover:bg-muted/30 transition-colors"
                   onClick={() => setExpandedSession(isExpanded ? null : session.id)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                      <Clock className="h-3.5 w-3.5 text-primary" />
                     </div>
-                    <div>
-                       <p className="font-semibold text-xs">{session.class_type_name} — {session.time}</p>
-                       <p className="text-[11px] text-muted-foreground">{session.instructor || ""}</p>
-                       {session.session_overrides && session.session_overrides[selectedDate] && (
-                         <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">📝 {session.session_overrides[selectedDate].notes}</p>
-                       )}
+                    <div className="min-w-0">
+                       <p className="font-semibold text-[10px] truncate">{session.class_type_name} — {session.time}</p>
+                       <p className="text-[9px] text-muted-foreground truncate">{session.instructor || ""}</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
-                    <Badge className="bg-green-100 text-green-700 border-0 text-sm h-7 px-2.5 gap-1">
-                      <Check className="h-4 w-4" />{present}
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Badge className="bg-green-100 text-green-700 border-0 text-[9px] h-5 px-1.5 gap-0.5">
+                      <Check className="h-3 w-3" />{present}
                     </Badge>
-                    <Badge className="bg-primary/10 text-primary border-0 text-sm h-7 px-2.5 gap-1">
-                      <Users className="h-4 w-4" />{activeCount}
+                    <Badge className="bg-primary/10 text-primary border-0 text-[9px] h-5 px-1.5 gap-0.5">
+                      <Users className="h-3 w-3" />{activeCount}
                     </Badge>
-                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                    {isExpanded ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </button>
 
                 {isExpanded && (
                   <div className="border-t border-border">
                     {/* Botões de chamada em lote — sempre visíveis */}
-                    <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/20 border-b border-border">
-                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-green-700 border-green-300"
+                    <div className="flex gap-1 px-2 py-1 bg-muted/20 border-b border-border">
+                      <Button size="sm" variant="outline" className="text-[9px] h-6 gap-0.5 flex-1 text-green-700 border-green-300"
                         onClick={() => handleMarkAll(session.id, "presente")}>
-                        <Check className="h-3.5 w-3.5" /> Todas presentes
+                        <Check className="h-2.5 w-2.5" /> Presentes
                       </Button>
-                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-destructive border-destructive/30"
+                      <Button size="sm" variant="outline" className="text-[9px] h-6 gap-0.5 flex-1 text-destructive border-destructive/30"
                         onClick={() => handleMarkAll(session.id, "faltou")}>
-                        <X className="h-3.5 w-3.5" /> Todas faltaram
+                        <X className="h-2.5 w-2.5" /> Faltaram
                       </Button>
-                      <Button size="sm" variant="outline" className="text-[11px] h-8 gap-1 text-primary border-primary/30"
+                      <Button size="sm" variant="outline" className="text-[9px] h-6 gap-0.5 flex-1 text-primary border-primary/30"
                         onClick={() => { setAddStudentDialog({ session }); setAddStudentForm({ name: "", isAvulsa: false }); }}>
-                        <UserPlus className="h-3.5 w-3.5" /> Adicionar aluna
+                        <UserPlus className="h-2.5 w-2.5" /> Adicionar
                       </Button>
                     </div>
                     {sessionBookings.length === 0 ? (
-                      <p className="text-center text-muted-foreground text-sm py-6">Nenhuma reserva</p>
+                      <p className="text-center text-muted-foreground text-[9px] py-2">Nenhuma reserva</p>
                     ) : (
                       <div className="divide-y divide-border">
                         {(() => {
-                          // Agrupar por email: mostrar apenas a reserva mais recente/ativa por aluna
                           const seen = new Set();
                           const unique = sessionBookings.filter((b) => {
                             if (seen.has(b.student_email)) return false;
@@ -240,14 +236,14 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                           return unique.map((booking) => {
                             const statusOpt = statusOptions.find((s) => s.value === booking.status) || statusOptions[0];
                             return (
-                              <div key={booking.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                              <div key={booking.id} className="flex items-center justify-between gap-1 px-2 py-1.5">
                                 <div className="min-w-0">
-                                   <p className="font-semibold text-[11px] truncate">{booking.student_name || "—"}</p>
-                                   <p className="text-[10px] text-muted-foreground truncate">{booking.student_email}</p>
+                                   <p className="font-medium text-[10px] truncate">{booking.student_name || "—"}</p>
+                                   <p className="text-[8px] text-muted-foreground truncate">{booking.student_email}</p>
                                  </div>
                                  <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
-                                   <SelectTrigger className="w-32 h-8 text-[11px]">
-                                    <Badge className={`${statusOpt.cls} border-0 text-xs`}>{statusOpt.label}</Badge>
+                                   <SelectTrigger className="w-24 h-6 text-[9px]">
+                                    <Badge className={`${statusOpt.cls} border-0 text-[8px]`}>{statusOpt.label}</Badge>
                                   </SelectTrigger>
                                   <SelectContent>
                                     {statusOptions.map((opt) => (
