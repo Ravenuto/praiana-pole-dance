@@ -165,7 +165,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       </div>
-      <p className="text-[10px] text-muted-foreground mb-3 capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="text-[10px] text-muted-foreground capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-6 w-32 text-[10px]" />
+      </div>
 
       {loadingSessions ? (
         Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg mb-1.5" />)
