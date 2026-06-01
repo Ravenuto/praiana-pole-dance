@@ -1,17 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Clock, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Pencil, Trash2, Loader2, Clock, User, Users, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
+import { format, addDays, startOfWeek, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth, isSameDay, endOfWeek } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import DaySelector, { DAYS } from "@/components/schedule/DaySelector";
 
-const emptyForm = { class_type_id: "", class_type_name: "", day_of_week: "segunda", time: "09:00", instructor: "", max_students: 8, notes: "", session_type: "weekly", specific_date: "" };
+const DAY_NAMES = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+const emptyForm = {
+  class_type_id: "", class_type_name: "", day_of_week: "segunda",
+  time: "09:00", instructor: "", max_students: 8, notes: "",
+  session_type: "weekly", specific_date: "",
+};
 
 export default function ManageSessions() {
   const queryClient = useQueryClient();
@@ -19,9 +26,11 @@ export default function ManageSessions() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [filterDay, setFilterDay] = useState("segunda");
-  const [editInstructorId, setEditInstructorId] = useState(null);
-  const [tempInstructor, setTempInstructor] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [weekAnchor, setWeekAnchor] = useState(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const { data: classTypes = [] } = useQuery({
     queryKey: ["classTypes"],
@@ -33,9 +42,27 @@ export default function ManageSessions() {
     queryFn: () => base44.entities.ClassSession.list(),
   });
 
-  const filteredSessions = sessions
-    .filter((s) => s.day_of_week === filterDay || (!s.is_recurring && s.day_of_week === filterDay))
-    .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+  const { data: bookings = [] } = useQuery({
+    queryKey: ["bookings", selectedDate],
+    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100),
+  });
+
+  const selectedDayKey = useMemo(() => DAY_NAMES[new Date(selectedDate + "T12:00:00").getDay()], [selectedDate]);
+
+  const filteredSessions = useMemo(() => {
+    return sessions
+      .filter((s) => {
+        if (s.is_recurring) return s.day_of_week === selectedDayKey && s.is_active !== false;
+        return s.date === selectedDate && s.is_active !== false;
+      })
+      .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+  }, [sessions, selectedDate, selectedDayKey]);
+
+  const bookingCountMap = useMemo(() => {
+    const map = {};
+    bookings.forEach((b) => { map[b.session_id] = (map[b.session_id] || 0) + 1; });
+    return map;
+  }, [bookings]);
 
   const handleClassTypeChange = (ctId) => {
     const ct = classTypes.find((c) => c.id === ctId);
@@ -50,9 +77,7 @@ export default function ManageSessions() {
       const isRecurring = form.session_type !== "once";
       const data = { ...form, is_active: true, is_recurring: isRecurring };
       if (!isRecurring) {
-        // Para aula única, calculamos o day_of_week a partir da data
-        const dayNames = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-        data.day_of_week = dayNames[new Date(form.specific_date + "T12:00:00").getDay()];
+        data.day_of_week = DAY_NAMES[new Date(form.specific_date + "T12:00:00").getDay()];
         data.date = form.specific_date;
       }
       if (editingId) {
@@ -97,153 +122,144 @@ export default function ManageSessions() {
     toast.success("Horário excluído");
   };
 
-  const handleSaveInstructor = async (sessionId) => {
-    await base44.entities.ClassSession.update(sessionId, { instructor: tempInstructor });
-    queryClient.invalidateQueries({ queryKey: ["allSessions"] });
-    queryClient.invalidateQueries({ queryKey: ["sessions"] });
-    setEditInstructorId(null);
-    toast.success("Instrutora atualizada");
+  // Mini calendário (igual ao Schedule)
+  const renderCalendar = () => {
+    const monthStart = startOfMonth(calendarMonth);
+    const monthEnd = endOfMonth(calendarMonth);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    const days = [];
+    let cur = calStart;
+    while (cur <= calEnd) { days.push(cur); cur = addDays(cur, 1); }
+    const today = new Date();
+    const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    return (
+      <div className="absolute top-full left-0 mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-4 w-72">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))} className="p-1 hover:bg-muted rounded-lg">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <p className="text-sm font-semibold capitalize">
+            {format(calendarMonth, "MMMM yyyy", { locale: ptBR })}
+          </p>
+          <button onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))} className="p-1 hover:bg-muted rounded-lg">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
+          {dayNames.map((d) => (
+            <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5">
+          {days.map((day) => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            const isCurrentMonth = isSameMonth(day, calendarMonth);
+            const isSelected = dateStr === selectedDate;
+            const isToday = isSameDay(day, today);
+            return (
+              <button
+                key={dateStr}
+                onClick={() => {
+                  if (!isCurrentMonth) return;
+                  setSelectedDate(dateStr);
+                  setWeekAnchor(day);
+                  setCalendarOpen(false);
+                }}
+                disabled={!isCurrentMonth}
+                className={`aspect-square rounded-lg text-xs font-medium transition-colors flex items-center justify-center
+                  ${!isCurrentMonth ? "opacity-0 pointer-events-none" : ""}
+                  ${isSelected ? "bg-primary text-primary-foreground" : ""}
+                  ${!isSelected && isToday ? "bg-primary/10 text-primary font-bold" : ""}
+                  ${!isSelected && !isToday && isCurrentMonth ? "hover:bg-muted" : ""}
+                `}
+              >
+                {format(day, "d")}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
-  const dayLabel = DAYS.find((d) => d.key === filterDay)?.full || filterDay;
+  const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="font-heading text-xl font-semibold">Horários de Aula</h2>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="rounded-full gap-2">
-              <Plus className="h-4 w-4" /> Novo Horário
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-heading">{editingId ? "Editar" : "Novo"} Horário</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              {/* Tipo: semanal ou única */}
-              <div>
-                <Label>Tipo de Aula *</Label>
-                <div className="mt-1.5 grid grid-cols-2 gap-2">
-                  {[{ v: "weekly", label: "Semanal (grade fixa)" }, { v: "once", label: "Aula única" }].map(({ v, label }) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setForm({ ...form, session_type: v })}
-                      className={`rounded-lg border px-3 py-2 text-sm text-left transition-colors ${form.session_type === v ? "border-primary bg-primary/10 text-primary font-medium" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label>Modalidade *</Label>
-                <Select value={form.class_type_id} onValueChange={handleClassTypeChange}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>
-                    {classTypes.map((ct) => (
-                      <SelectItem key={ct.id} value={ct.id}>{ct.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {form.session_type === "weekly" ? (
-              <div>
-                <Label>Dia da Semana *</Label>
-                <Select value={form.day_of_week} onValueChange={(v) => setForm({ ...form, day_of_week: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {DAYS.map((d) => (
-                      <SelectItem key={d.key} value={d.key}>{d.full}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              ) : (
-              <div>
-                <Label>Data da Aula *</Label>
-                <Input type="date" value={form.specific_date} onChange={(e) => setForm({ ...form, specific_date: e.target.value })} />
-              </div>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Horário *</Label>
-                  <Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Máx. Alunas</Label>
-                  <Input type="number" value={form.max_students} onChange={(e) => setForm({ ...form, max_students: parseInt(e.target.value) || 8 })} />
-                </div>
-              </div>
-              <div>
-                <Label>Instrutora</Label>
-                <Input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} placeholder="Nome da instrutora" />
-              </div>
-              <div>
-                <Label>Observações</Label>
-                <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Ex: Nível intermediário" />
-              </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Salvar" : "Criar Horário"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" className="rounded-full gap-2" onClick={() => { setForm(emptyForm); setEditingId(null); setOpen(true); }}>
+          <Plus className="h-4 w-4" /> Novo Horário
+        </Button>
       </div>
 
-      <DaySelector selected={filterDay} onChange={setFilterDay} />
+      {/* Seletor de data com calendário — igual ao das alunas */}
+      <div className="relative mb-3">
+        <button
+          onClick={() => setCalendarOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-muted/40 border border-border hover:border-primary/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium capitalize">{formattedDate}</span>
+          </div>
+          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${calendarOpen ? "rotate-90" : ""}`} />
+        </button>
+        {calendarOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setCalendarOpen(false)} />
+            {renderCalendar()}
+          </>
+        )}
+      </div>
 
-      <div className="mt-4 grid gap-3">
+      <DaySelector
+        selectedDate={selectedDate}
+        onSelectDate={(dateStr) => setSelectedDate(dateStr)}
+        weekAnchor={weekAnchor}
+        onWeekChange={(newAnchor) => setWeekAnchor(newAnchor)}
+      />
+
+      {/* Lista de aulas do dia */}
+      <div className="mt-4 space-y-3">
         {filteredSessions.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground">Nenhum horário para {dayLabel}</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <CalendarDays className="h-8 w-8 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Nenhuma aula neste dia</p>
+            <p className="text-xs mt-1">Clique em "Novo Horário" para adicionar</p>
+          </div>
         ) : (
-          filteredSessions.map((s) => (
-            <Card key={s.id}>
-              <CardContent className="p-4">
+          filteredSessions.map((s) => {
+            const booked = bookingCountMap[s.id] || 0;
+            const max = s.max_students || 8;
+            const isFull = booked >= max;
+            return (
+              <div key={s.id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium">{s.class_type_name} — {s.time}</p>
+                      <p className="font-semibold text-sm">{s.class_type_name} — {s.time}</p>
+                      {s.instructor && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <User className="h-3 w-3" /> {s.instructor}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className={`text-xs flex items-center gap-1 ${isFull ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          <Users className="h-3 w-3" /> {booked}/{max} {isFull ? "— Lotada" : ""}
+                        </span>
                         {!s.is_recurring && (
-                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Aula única{s.date ? ` · ${s.date}` : ""}</span>
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Aula única</span>
+                        )}
+                        {s.notes && (
+                          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{s.notes}</span>
                         )}
                       </div>
-                      {/* Instrutora com edição inline */}
-                      {editInstructorId === s.id ? (
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Input
-                            autoFocus
-                            value={tempInstructor}
-                            onChange={(e) => setTempInstructor(e.target.value)}
-                            className="h-7 text-xs w-36"
-                            placeholder="Nome da instrutora"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveInstructor(s.id); if (e.key === "Escape") setEditInstructorId(null); }}
-                          />
-                          <Button size="sm" className="h-7 text-xs px-2" onClick={() => handleSaveInstructor(s.id)}>Ok</Button>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setEditInstructorId(null)}>✕</Button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setEditInstructorId(s.id); setTempInstructor(s.instructor || ""); }}
-                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
-                          title="Clique para alterar instrutora"
-                        >
-                          <User className="h-3 w-3" />
-                          {s.instructor || <span className="italic">Sem instrutora</span>}
-                          <Pencil className="h-2.5 w-2.5 opacity-50" />
-                        </button>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Até {s.max_students || 8} alunas{s.notes && ` · ${s.notes}`}
-                      </p>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
@@ -255,11 +271,93 @@ export default function ManageSessions() {
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
+
+      {/* Dialog criar/editar */}
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-heading">{editingId ? "Editar" : "Novo"} Horário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <Label>Tipo de Aula *</Label>
+              <div className="mt-1.5 grid grid-cols-2 gap-2">
+                {[{ v: "weekly", label: "Semanal (grade fixa)" }, { v: "once", label: "Aula única" }].map(({ v, label }) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForm({ ...form, session_type: v })}
+                    className={`rounded-lg border px-3 py-2 text-sm text-left transition-colors ${form.session_type === v ? "border-primary bg-primary/10 text-primary font-medium" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>Modalidade *</Label>
+              <Select value={form.class_type_id} onValueChange={handleClassTypeChange}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  {classTypes.map((ct) => (
+                    <SelectItem key={ct.id} value={ct.id}>{ct.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.session_type === "weekly" ? (
+              <div>
+                <Label>Dia da Semana *</Label>
+                <Select value={form.day_of_week} onValueChange={(v) => setForm({ ...form, day_of_week: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DAYS.map((d) => (
+                      <SelectItem key={d.key} value={d.key}>{d.full}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <Label>Data da Aula *</Label>
+                <Input type="date" value={form.specific_date} onChange={(e) => setForm({ ...form, specific_date: e.target.value })} />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Horário *</Label>
+                <Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+              </div>
+              <div>
+                <Label>Máx. Alunas</Label>
+                <Input type="number" value={form.max_students} onChange={(e) => setForm({ ...form, max_students: parseInt(e.target.value) || 8 })} />
+              </div>
+            </div>
+
+            <div>
+              <Label>Instrutora</Label>
+              <Input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} placeholder="Nome da instrutora" />
+            </div>
+
+            <div>
+              <Label>Observações</Label>
+              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Ex: Nível intermediário" />
+            </div>
+
+            <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Salvar alterações" : "Criar Horário"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
