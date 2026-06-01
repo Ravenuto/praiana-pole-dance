@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Loader2, Save, CalendarDays, Phone, CreditCard, CheckCircle2 } from "lucide-react";
+import { Camera, Loader2, Save, CalendarDays, Phone, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import MyPaymentHistory from "@/components/profile/MyPaymentHistory";
 
 const planInfo = {
   "4_aulas": { label: "4 aulas/mês", price: "R$ 230", color: "bg-blue-100 text-blue-700" },
@@ -153,7 +154,7 @@ export default function Profile() {
       </div>
 
       {/* Plano e créditos */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="text-xs text-muted-foreground mb-1">Plano</p>
           <p className="font-heading text-lg font-bold">{planData.label}</p>
@@ -170,7 +171,30 @@ export default function Profile() {
             />
           </div>
         </div>
+      </div>
 
+      {/* Datas do plano */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        {currentUser?.plan_start_date && (
+          <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
+              <CalendarDays className="h-3 w-3" /> Início do plano
+            </p>
+            <p className="font-medium text-sm">
+              {format(new Date(currentUser.plan_start_date + "T12:00:00"), "dd/MM/yyyy")}
+            </p>
+          </div>
+        )}
+        {currentUser?.last_payment_date && (
+          <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
+              <RefreshCw className="h-3 w-3" /> Última renovação
+            </p>
+            <p className="font-medium text-sm">
+              {format(new Date(currentUser.last_payment_date + "T12:00:00"), "dd/MM/yyyy")}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Formulário */}
@@ -208,6 +232,9 @@ export default function Profile() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4" /> Salvar alterações</>}
         </Button>
       </div>
+
+      {/* Histórico de pagamentos */}
+      {userData?.id && <MyPaymentHistory userId={userData.id} />}
     </div>
   );
 }
