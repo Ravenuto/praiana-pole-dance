@@ -135,36 +135,38 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Navegação da semana */}
-      <div className="flex items-center justify-center gap-3 mb-2">
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-2 hover:bg-muted rounded transition-colors">
-          <ChevronLeft className="h-5 w-5 text-primary" />
+      <div className="flex items-center gap-1 mb-2">
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1.5 rounded-lg hover:bg-muted transition-colors shrink-0">
+          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
         </button>
-        <div className="flex gap-1">
+
+        <div className="grid grid-cols-7 gap-0.5 flex-1">
           {weekDays.map((day) => {
             const dateStr = format(day, "yyyy-MM-dd");
             const isSelected = dateStr === selectedDate;
-            const dayLabel = format(day, "EEE", { locale: ptBR });
+            const dayLabel = format(day, "EEEEE", { locale: ptBR });
             const dayNum = format(day, "d");
             return (
               <button
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`flex flex-col items-center justify-center h-12 w-12 rounded text-[10px] font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center rounded-xl py-2 px-0.5 text-center transition-colors font-body min-w-0 ${
                   isSelected
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
                 }`}
               >
-                <span className="capitalize leading-none">{dayLabel}</span>
-                <span className="font-semibold text-[11px] leading-none">{dayNum}</span>
+                <span className="text-[10px] font-medium capitalize leading-none">{dayLabel}</span>
+                <span className="text-sm font-bold leading-tight">{dayNum}</span>
               </button>
             );
           })}
         </div>
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-2 hover:bg-muted rounded transition-colors">
-          <ChevronRight className="h-5 w-5 text-primary" />
+
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1.5 rounded-lg hover:bg-muted transition-colors shrink-0">
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
-        </div>
+      </div>
       <div className="flex items-center justify-center gap-6 mb-3">
         <p className="text-xs text-muted-foreground capitalize flex-1 text-left">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
         <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-7 text-xs w-32" />
