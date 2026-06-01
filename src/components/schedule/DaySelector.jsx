@@ -11,12 +11,38 @@ function getWeekDays(anchor) {
 
 const DAY_KEY_MAP = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
 
-export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, onWeekChange }) {
+// Suporta duas APIs:
+// Nova (Schedule): selectedDate (string yyyy-MM-dd), onSelectDate, weekAnchor (Date), onWeekChange
+// Legada (ManageSessions): selected (day key string), onChange (day key string)
+export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, onWeekChange, selected, onChange }) {
+  const isLegacyMode = !!onChange;
+
   const anchor = weekAnchor instanceof Date && !isNaN(weekAnchor) ? weekAnchor : new Date();
   const weekDays = getWeekDays(anchor);
 
-  const prevWeek = () => onWeekChange(addDays(anchor, -7));
-  const nextWeek = () => onWeekChange(addDays(anchor, 7));
+  const prevWeek = () => onWeekChange && onWeekChange(addDays(anchor, -7));
+  const nextWeek = () => onWeekChange && onWeekChange(addDays(anchor, 7));
+
+  // Legacy mode: simple day-of-week tabs
+  if (isLegacyMode) {
+    return (
+      <div className="flex gap-1 flex-wrap">
+        {DAYS.map((d) => (
+          <button
+            key={d.key}
+            onClick={() => onChange(d.key)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              selected === d.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+            }`}
+          >
+            {d.full}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1">
@@ -35,7 +61,7 @@ export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, on
           return (
             <button
               key={dateStr}
-              onClick={() => onSelectDate(dateStr)}
+              onClick={() => onSelectDate && onSelectDate(dateStr)}
               className={`flex flex-col items-center justify-center rounded-xl py-2 px-1 text-center transition-colors font-body ${
                 isSelected
                   ? "bg-primary text-primary-foreground"
