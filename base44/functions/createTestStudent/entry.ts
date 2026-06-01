@@ -8,27 +8,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
-    // Check if already exists
+    // Delete if exists to recreate fresh
     const existing = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
     if (existing.length > 0) {
-      return Response.json({ success: true, message: "Aluna teste já existe" });
+      await base44.asServiceRole.entities.User.delete(existing[0].id);
+      await new Promise(r => setTimeout(r, 1000));
     }
 
     // Invite the test student
     await base44.users.inviteUser("aluna.teste@praiana.app", "user");
 
-    // Wait for user to be created
-    await new Promise(r => setTimeout(r, 3000));
+    // Wait for user to be created with longer delay
+    await new Promise(r => setTimeout(r, 5000));
 
-    // Get the created user - retry if needed
+    // Get the created user with multiple retries
     let testUser = null;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const users = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
       if (users.length > 0) {
         testUser = users[0];
         break;
       }
-      if (i < 2) await new Promise(r => setTimeout(r, 1500));
+      if (i < 4) await new Promise(r => setTimeout(r, 2000));
     }
 
     if (testUser) {
