@@ -129,13 +129,13 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5">
         <div className="flex gap-1 flex-wrap">
           {DAYS.map((d) => (
             <button
               key={d.key}
               onClick={() => { setSelectedDay(d.key); setDateOverride(""); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-2 py-1 text-xs rounded-lg font-medium transition-colors ${
                 selectedDay === d.key && !dateOverride ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >

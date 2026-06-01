@@ -8,43 +8,58 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
-    // Delete if exists to recreate fresh
-    const existing = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
+    const testEmail = "aluna.teste@praiana.app";
+    
+    // Verificar se já existe
+    const existing = await base44.asServiceRole.entities.User.filter({ email: testEmail });
     if (existing.length > 0) {
-      await base44.asServiceRole.entities.User.delete(existing[0].id);
-      await new Promise(r => setTimeout(r, 1000));
+      // Já existe, só retorna
+      return Response.json({ 
+        success: true, 
+        message: "Aluna teste já existe!" 
+      });
     }
 
-    // Invite the test student
-    await base44.users.inviteUser("aluna.teste@praiana.app", "user");
+    // Criar novo usuário convidando via email
+    await base44.users.inviteUser(testEmail, "user");
+    
+    // Esperar a criação
+    await new Promise(r => setTimeout(r, 3000));
 
-    // Wait for user to be created with longer delay
-    await new Promise(r => setTimeout(r, 5000));
-
-    // Get the created user with multiple retries
+    // Buscar o usuário criado com retry
     let testUser = null;
-    for (let i = 0; i < 5; i++) {
-      const users = await base44.asServiceRole.entities.User.filter({ email: "aluna.teste@praiana.app" });
+    for (let i = 0; i < 8; i++) {
+      const users = await base44.asServiceRole.entities.User.filter({ email: testEmail });
       if (users.length > 0) {
         testUser = users[0];
         break;
       }
-      if (i < 4) await new Promise(r => setTimeout(r, 2000));
+      if (i < 7) await new Promise(r => setTimeout(r, 1500));
     }
 
     if (testUser) {
-      // Update with test data
+      // Atualizar com dados de teste
       await base44.asServiceRole.entities.User.update(testUser.id, {
         full_name: "Aluna Teste",
         plan: "4_aulas",
-        credits: 2,
-        plan_start_date: "2026-05-15",
-        last_payment_date: "2026-05-15",
-        is_active: true
+        credits: 4,
+        plan_start_date: "2026-05-20",
+        last_payment_date: "2026-05-20",
+        is_active: true,
+        phone: "(11) 98765-4321",
+        birth_date: "1995-03-15"
       });
+      
+      return Response.json({ 
+        success: true, 
+        message: `Aluna teste criada! ID: ${testUser.id}`,
+        userId: testUser.id
+      });
+    } else {
+      return Response.json({ 
+        error: 'Aluna foi convidada mas não foi encontrada no sistema. Aguarde alguns minutos e tente novamente.' 
+      }, { status: 500 });
     }
-
-    return Response.json({ success: true, message: "Aluna teste criada com email: aluna.teste@praiana.app" });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
