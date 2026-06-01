@@ -53,7 +53,7 @@ function DeleteRecurringDialog({ session, date, onCancel, onDeleteOne, onDeleteA
 const emptyForm = {
   class_type_id: "", class_type_name: "", day_of_week: "segunda",
   time: "09:00", instructor: "", max_students: 8, notes: "",
-  session_type: "weekly", specific_date: "",
+  session_type: "weekly", specific_date: "", override_notes: "",
 };
 
 export default function ManageSessions() {
@@ -140,6 +140,14 @@ export default function ManageSessions() {
         data.day_of_week = DAY_NAMES[new Date(form.specific_date + "T12:00:00").getDay()];
         data.date = form.specific_date;
       }
+      
+      // Se for recorrente e tiver override_notes, cria um registro de override
+      if (isRecurring && form.override_notes) {
+        const overrideKey = `${editingId || "new"}_${selectedDate}`;
+        data.session_overrides = data.session_overrides || {};
+        data.session_overrides[selectedDate] = { notes: form.override_notes };
+      }
+      
       if (editingId) {
         await base44.entities.ClassSession.update(editingId, data);
         toast.success("Horário atualizado");
@@ -169,6 +177,7 @@ export default function ManageSessions() {
       notes: s.notes || "",
       session_type: s.is_recurring === false ? "once" : "weekly",
       specific_date: s.date || "",
+      override_notes: s.override_notes || "",
     });
     setEditingId(s.id);
     setOpen(true);
@@ -369,8 +378,11 @@ export default function ManageSessions() {
                           <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Aula única</span>
                         )}
                         {s.notes && (
-                          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{s.notes}</span>
-                        )}
+                            <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{s.notes}</span>
+                          )}
+                          {s.session_overrides && s.session_overrides[selectedDate] && (
+                            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full">📝 {s.session_overrides[selectedDate].notes}</span>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -471,9 +483,21 @@ export default function ManageSessions() {
             </div>
 
             <div>
-              <Label>Observações</Label>
+              <Label>Observações gerais</Label>
               <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Ex: Nível intermediário" />
             </div>
+
+            {form.session_type === "weekly" && (
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3">
+                <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2">📝 Observação específica (apenas para {formattedDate})</p>
+                <Input 
+                  value={form.override_notes} 
+                  onChange={(e) => setForm({ ...form, override_notes: e.target.value })} 
+                  placeholder="Ex: Com salto, Sem salto..." 
+                  className="h-8 text-sm"
+                />
+              </div>
+            )}
 
             <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Salvar alterações" : "Criar Horário"}

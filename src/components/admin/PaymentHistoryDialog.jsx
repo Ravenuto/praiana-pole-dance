@@ -132,7 +132,7 @@ export default function PaymentHistoryDialog({ student, onClose }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {plans.map(p => (
+                  {plans.sort((a, b) => (a.label || "").localeCompare(b.label || "")).map(p => (
                     <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
                   ))}
                 </SelectContent>

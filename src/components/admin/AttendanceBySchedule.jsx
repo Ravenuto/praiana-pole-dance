@@ -171,20 +171,20 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                   onClick={() => setExpandedSession(isExpanded ? null : session.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-4 w-4 text-primary" />
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{session.class_type_name} — {session.time}</p>
                       <p className="text-xs text-muted-foreground">{session.instructor || ""}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-0.5 shrink-0 flex-wrap justify-end">
-                    <Badge className="bg-green-100 text-green-700 border-0 text-xs h-5 px-1.5 gap-0.5 text-[11px]">
-                      <Check className="h-2 w-2" />{present}
+                  <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+                    <Badge className="bg-green-100 text-green-700 border-0 text-sm h-7 px-2.5 gap-1">
+                      <Check className="h-4 w-4" />{present}
                     </Badge>
-                    <Badge className="bg-primary/10 text-primary border-0 text-xs h-5 px-1.5 gap-0.5 text-[11px]">
-                      <Users className="h-2 w-2" />{activeCount}
+                    <Badge className="bg-primary/10 text-primary border-0 text-sm h-7 px-2.5 gap-1">
+                      <Users className="h-4 w-4" />{activeCount}
                     </Badge>
                     {isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
                   </div>
