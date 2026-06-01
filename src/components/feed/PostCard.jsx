@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Send, Trash2 } from "lucide-react"; // Trash2 ainda usado no header
+import { Heart, MessageCircle, Send, Trash2 } from "lucide-react";
+import { createNotification } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -23,7 +24,6 @@ export default function PostCard({ post, currentUser, onDelete }) {
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
     queryFn: () => base44.entities.Comment.filter({ post_id: post.id }, "created_date"),
-    enabled: showComments,
   });
 
   const handleLike = async () => {
@@ -32,6 +32,33 @@ export default function PostCard({ post, currentUser, onDelete }) {
       : [...likes, currentUser?.email];
     await base44.entities.Post.update(post.id, { likes: newLikes });
     queryClient.invalidateQueries({ queryKey: ["posts"] });
+    // Notificar dono do post (se não for o próprio)
+    if (!isLiked && post.author_email && post.author_email !== currentUser?.email) {
+      createNotification({
+        user_email: post.author_email,
+        type: "like",
+        title: `${currentUser?.full_name || currentUser?.email} curtiu seu post`,
+        message: post.caption ? post.caption.substring(0, 60) : "Seu post recebeu uma curtida",
+        link: "/feed",
+        actor_name: currentUser?.full_name || currentUser?.email,
+      });
+    }
+    // Notificar admins sobre novo post curtido
+    if (!isLiked) {
+      const admins = await base44.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        if (admin.email !== currentUser?.email && admin.email !== post.author_email) {
+          createNotification({
+            user_email: admin.email,
+            type: "like",
+            title: `${currentUser?.full_name || currentUser?.email} curtiu um post`,
+            message: `Post de ${post.author_name || post.author_email}`,
+            link: "/feed",
+            actor_name: currentUser?.full_name || currentUser?.email,
+          });
+        }
+      }
+    }
   };
 
   const handleComment = async (e) => {
@@ -47,6 +74,31 @@ export default function PostCard({ post, currentUser, onDelete }) {
     });
     setCommentText("");
     queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
+    // Notificar dono do post
+    if (post.author_email && post.author_email !== currentUser?.email) {
+      createNotification({
+        user_email: post.author_email,
+        type: "comment",
+        title: `${currentUser?.full_name || currentUser?.email} comentou no seu post`,
+        message: commentText.trim().substring(0, 80),
+        link: "/feed",
+        actor_name: currentUser?.full_name || currentUser?.email,
+      });
+    }
+    // Notificar admins
+    const admins = await base44.entities.User.filter({ role: "admin" });
+    for (const admin of admins) {
+      if (admin.email !== currentUser?.email && admin.email !== post.author_email) {
+        createNotification({
+          user_email: admin.email,
+          type: "comment",
+          title: `${currentUser?.full_name || currentUser?.email} comentou no feed`,
+          message: commentText.trim().substring(0, 80),
+          link: "/feed",
+          actor_name: currentUser?.full_name || currentUser?.email,
+        });
+      }
+    }
     setSubmitting(false);
   };
 
@@ -93,14 +145,14 @@ export default function PostCard({ post, currentUser, onDelete }) {
             }`}
           >
             <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500" : ""}`} />
-            {likes.length > 0 && <span>{likes.length}</span>}
+            <span>{likes.length}</span>
           </button>
           <button
             onClick={() => setShowComments(!showComments)}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <MessageCircle className="h-5 w-5" />
-            {comments.length > 0 && <span>{comments.length}</span>}
+            <span>{comments.length}</span>
           </button>
         </div>
 

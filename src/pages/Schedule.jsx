@@ -2,13 +2,13 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, addDays, addWeeks, startOfWeek, isSameWeek } from "date-fns";
+import { format, addDays, startOfMonth, endOfMonth, isSameMonth, startOfWeek, endOfWeek, isSameDay, parseISO, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
 import CreditBanner from "@/components/schedule/CreditBanner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
@@ -18,44 +18,60 @@ function getTodayDayKey() {
   return days[new Date().getDay()];
 }
 
-function getDateForDay(dayKey) {
-  const dayMap = { domingo: 0, segunda: 1, terca: 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6 };
-  const today = new Date();
-  const todayDay = today.getDay();
-  const targetDay = dayMap[dayKey];
-  let diff = targetDay - todayDay;
-  if (diff < 0) diff += 7;
-  return format(addDays(today, diff), "yyyy-MM-dd");
-}
-
-// Retorna a data (yyyy-MM-dd) de um dia específico numa semana deslocada
-function getDateForDayInWeek(dayKey, weekOffset) {
-  const dayMap = { domingo: 0, segunda: 1, terca: 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6 };
-  const base = addWeeks(new Date(), weekOffset);
-  const weekStart = startOfWeek(base, { weekStartsOn: 1 }); // semana começa na segunda
-  const dayIndex = dayMap[dayKey];
-  // Ajustar: segunda = 0 offset na semana (weekStartsOn 1)
-  const offsetFromMon = dayIndex === 0 ? 6 : dayIndex - 1;
-  return format(addDays(weekStart, offsetFromMon), "yyyy-MM-dd");
+function getDayKey(date) {
+  const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+  return days[date.getDay()];
 }
 
 export default function Schedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedDay, setSelectedDay] = useState(getTodayDayKey());
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [loadingSession, setLoadingSession] = useState(null);
 
-  const selectedDate = useMemo(() => getDateForDayInWeek(selectedDay, weekOffset), [selectedDay, weekOffset]);
+  const selectedDay = useMemo(() => getDayKey(new Date(selectedDate + "T12:00:00")), [selectedDate]);
+
+  // Lógica de datas permitidas para a aluna (dentro do período do plano)
+  const { data: userData } = useQuery({
+    queryKey: ["myProfile", user?.email],
+    queryFn: async () => {
+      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      return u || null;
+    },
+    enabled: !!user?.email,
+  });
+
+  // Data mínima e máxima baseadas no plano
+  const planDates = useMemo(() => {
+    const isAdmin = user?.role === "admin";
+    if (isAdmin) return { min: null, max: null }; // admin sem restrição
+    const startStr = userData?.plan_start_date;
+    if (!startStr) return { min: null, max: null };
+    const start = new Date(startStr + "T12:00:00");
+    const end = addDays(start, 31); // 1 mês a partir do início do plano
+    return { min: format(start, "yyyy-MM-dd"), max: format(end, "yyyy-MM-dd") };
+  }, [userData, user]);
+
+  const isDateAllowed = (dateStr) => {
+    if (!planDates.min && !planDates.max) return true;
+    if (planDates.min && dateStr < planDates.min) return false;
+    if (planDates.max && dateStr > planDates.max) return false;
+    return true;
+  };
+
+  const userCredits = userData?.credits ?? user?.credits ?? 0;
+  const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ["sessions", selectedDay, selectedDate],
     queryFn: async () => {
-      // Busca aulas recorrentes do dia da semana + aulas únicas da data específica
       const [recurring, oneOff] = await Promise.all([
         base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true, is_recurring: true }),
         base44.entities.ClassSession.filter({ date: selectedDate, is_active: true, is_recurring: false }),
       ]);
+      // Filtrar sessões "feriado"
       return [...recurring, ...oneOff];
     },
   });
@@ -81,23 +97,6 @@ export default function Schedule() {
     queryFn: () => base44.entities.WaitlistEntry.filter({ session_date: selectedDate, student_email: user?.email }),
     enabled: !!user?.email,
   });
-
-  const { data: userData } = useQuery({
-    queryKey: ["myProfile", user?.email],
-    queryFn: async () => {
-      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      return u || null;
-    },
-    enabled: !!user?.email,
-  });
-  const userCredits = userData?.credits ?? user?.credits ?? 0;
-  // Conta quantas reservas ativas a aluna tem hoje (para limitar pelo plano)
-  const { data: myActiveBookingsToday = [] } = useQuery({
-    queryKey: ["myActiveBookingsToday", user?.email],
-    queryFn: () => base44.entities.Booking.filter({ student_email: user?.email, status: "confirmada" }, "-session_date", 200),
-    enabled: !!user?.email,
-  });
-  const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
   const bookingCountMap = useMemo(() => {
@@ -137,16 +136,27 @@ export default function Schedule() {
     queryClient.invalidateQueries({ queryKey: ["myBookings"] });
     queryClient.invalidateQueries({ queryKey: ["myWaitlist"] });
     queryClient.invalidateQueries({ queryKey: ["allWaitlist"] });
-    queryClient.invalidateQueries({ queryKey: ["creditBookings"] });
     queryClient.invalidateQueries({ queryKey: ["myProfile"] });
   };
 
   const handleBook = async (session) => {
+    if (!hasCredits) {
+      toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
+      return;
+    }
+    if (!isDateAllowed(selectedDate)) {
+      toast.error("Esta data está fora do período do seu plano. Renove seu plano para continuar reservando!", { duration: 5000 });
+      return;
+    }
     setLoadingSession(session.id);
     try {
-      // Busca dados atuais do usuário para decrementar créditos
-      const [userData] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = userData?.credits || 0;
+      const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      const currentCredits = latestUser?.credits || 0;
+      if (currentCredits <= 0 && user?.role !== "admin") {
+        toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
+        setLoadingSession(null);
+        return;
+      }
       await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
@@ -156,24 +166,20 @@ export default function Schedule() {
         student_email: user?.email,
         status: "confirmada",
       });
-      if (userData?.id) {
-        if (currentCredits <= 0) {
-          toast.error("Você não tem créditos disponíveis");
-          setLoadingSession(null);
-          return;
-        }
-        await base44.entities.User.update(userData.id, { credits: currentCredits - 1 });
+      if (latestUser?.id && user?.role !== "admin") {
+        await base44.entities.User.update(latestUser.id, { credits: currentCredits - 1 });
       }
       invalidate();
       toast.success("Aula reservada!");
-      // Notificar admins
+      // Notificar admins com data em formato brasileiro
+      const dataBR = format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy");
       const admins = await base44.entities.User.filter({ role: "admin" });
       for (const admin of admins) {
         createNotification({
           user_email: admin.email,
           type: "booking_made",
           title: `${user?.full_name || user?.email} reservou uma aula`,
-          message: `${session.class_type_name} — ${selectedDate} às ${session.time}`,
+          message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
           link: "/admin",
           actor_name: user?.full_name || user?.email,
         });
@@ -187,24 +193,39 @@ export default function Schedule() {
   const handleCancel = async (session) => {
     const booking = myBookingMap[session.id];
     if (!booking) return;
+
+    // Verificar janela de cancelamento
+    const [h, m] = (session.time || "00:00").split(":").map(Number);
+    const classDateTime = new Date(`${selectedDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+    const diffMs = classDateTime - new Date();
+    if (diffMs <= 4 * 60 * 60 * 1000 && diffMs > 0) {
+      toast.error("Cancelamento não permitido: faltam menos de 4 horas para a aula.", { duration: 5000 });
+      return;
+    }
+    if (diffMs <= 0) {
+      toast.error("Esta aula já passou, não é possível cancelar.", { duration: 5000 });
+      return;
+    }
+
     setLoadingSession(session.id);
     try {
-      const [userData] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = userData?.credits || 0;
+      const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      const currentCredits = latestUser?.credits || 0;
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
-      if (userData?.id) {
-        await base44.entities.User.update(userData.id, { credits: currentCredits + 1 });
+      if (latestUser?.id && user?.role !== "admin") {
+        await base44.entities.User.update(latestUser.id, { credits: currentCredits + 1 });
       }
       invalidate();
-      toast.success("Reserva cancelada");
-      // Notificar admins
+      toast.success("Reserva cancelada e crédito devolvido!");
+      // Notificar admins com data em formato brasileiro
+      const dataBR = format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy");
       const admins = await base44.entities.User.filter({ role: "admin" });
       for (const admin of admins) {
         createNotification({
           user_email: admin.email,
           type: "booking_cancelled",
           title: `${user?.full_name || user?.email} cancelou uma aula`,
-          message: `${session.class_type_name} — ${selectedDate} às ${session.time}`,
+          message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
           link: "/admin",
           actor_name: user?.full_name || user?.email,
         });
@@ -218,7 +239,6 @@ export default function Schedule() {
   const handleJoinWaitlist = async (session) => {
     setLoadingSession(session.id);
     try {
-      // conta quantas já estão na fila para essa sessão
       const allWaiting = await base44.entities.WaitlistEntry.filter({ session_id: session.id, session_date: selectedDate });
       await base44.entities.WaitlistEntry.create({
         session_id: session.id,
@@ -251,7 +271,84 @@ export default function Schedule() {
     setLoadingSession(null);
   };
 
-  const formattedDate = format(new Date(selectedDate + "T12:00:00"), "d 'de' MMMM", { locale: ptBR });
+  // Calendário mini
+  const renderCalendar = () => {
+    const monthStart = startOfMonth(calendarMonth);
+    const monthEnd = endOfMonth(calendarMonth);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    const days = [];
+    let cur = calStart;
+    while (cur <= calEnd) {
+      days.push(cur);
+      cur = addDays(cur, 1);
+    }
+    const today = new Date();
+    const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    return (
+      <div className="absolute top-full left-0 mt-2 z-50 bg-card border border-border rounded-2xl shadow-xl p-4 w-72">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))} className="p-1 hover:bg-muted rounded-lg">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <p className="text-sm font-semibold capitalize">
+            {format(calendarMonth, "MMMM yyyy", { locale: ptBR })}
+          </p>
+          <button onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))} className="p-1 hover:bg-muted rounded-lg">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
+          {dayNames.map((d) => (
+            <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5">
+          {days.map((day) => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            const isCurrentMonth = isSameMonth(day, calendarMonth);
+            const isSelected = dateStr === selectedDate;
+            const isToday = isSameDay(day, today);
+            const allowed = isDateAllowed(dateStr);
+            const isPast = day < today && !isToday;
+
+            return (
+              <button
+                key={dateStr}
+                onClick={() => {
+                  if (!allowed || !isCurrentMonth) return;
+                  setSelectedDate(dateStr);
+                  setCalendarOpen(false);
+                }}
+                disabled={!allowed || !isCurrentMonth}
+                className={`aspect-square rounded-lg text-xs font-medium transition-colors flex items-center justify-center
+                  ${!isCurrentMonth ? "opacity-0 pointer-events-none" : ""}
+                  ${isSelected ? "bg-primary text-primary-foreground" : ""}
+                  ${!isSelected && isToday ? "bg-primary/10 text-primary font-bold" : ""}
+                  ${!isSelected && !isToday && allowed && isCurrentMonth ? "hover:bg-muted" : ""}
+                  ${(!allowed || isPast) && !isSelected && isCurrentMonth ? "opacity-30 cursor-not-allowed" : ""}
+                `}
+              >
+                {format(day, "d")}
+              </button>
+            );
+          })}
+        </div>
+        {planDates.min && (
+          <p className="text-[10px] text-muted-foreground mt-2 text-center">
+            Plano válido: {format(new Date(planDates.min + "T12:00:00"), "dd/MM")} até {format(new Date(planDates.max + "T12:00:00"), "dd/MM")}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
+
+  // Verificar se é feriado
+  const isHoliday = sortedSessions.length === 1 && sortedSessions[0]?.notes?.toLowerCase().includes("feriado");
+  const holidaySession = sortedSessions.find(s => s.is_active === false || (s.notes && s.notes.toLowerCase().includes("feriado")));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 font-body">
@@ -262,34 +359,40 @@ export default function Schedule() {
 
       <CreditBanner />
 
-      {/* Navegador de semana */}
-      <div className="flex items-center justify-between mb-3 p-2 rounded-xl bg-muted/40 border border-border">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o - 1)}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <div className="text-center">
-          <p className="text-sm font-medium">
-            {weekOffset === 0 ? "Esta semana" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana passada" : `Semana ${weekOffset > 0 ? "+" : ""}${weekOffset}`}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {format(getDateForDayInWeek("segunda", weekOffset) + "T12:00:00" > "2000" ? new Date(getDateForDayInWeek("segunda", weekOffset) + "T12:00:00") : new Date(), "d MMM", { locale: ptBR })}
-            {" — "}
-            {format(new Date(getDateForDayInWeek("domingo", weekOffset) + "T12:00:00"), "d MMM", { locale: ptBR })}
-          </p>
-        </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o + 1)}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      {/* Seletor de data com calendário */}
+      <div className="relative mb-4">
+        <button
+          onClick={() => setCalendarOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-muted/40 border border-border hover:border-primary/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium capitalize">{formattedDate}</span>
+          </div>
+          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${calendarOpen ? "rotate-90" : ""}`} />
+        </button>
+
+        {calendarOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setCalendarOpen(false)} />
+            {renderCalendar()}
+          </>
+        )}
       </div>
 
-      <DaySelector selected={selectedDay} onChange={setSelectedDay} />
+      <DaySelector selected={getDayKey(new Date(selectedDate + "T12:00:00"))} onChange={(dayKey) => {
+        // Ao clicar num dia da semana, vai para esse dia na semana atual/mais próxima
+        const dayMap = { domingo: 0, segunda: 1, terca: 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6 };
+        const today = new Date();
+        const todayDay = today.getDay();
+        const targetDay = dayMap[dayKey];
+        let diff = targetDay - todayDay;
+        if (diff < 0) diff += 7;
+        const newDate = format(addDays(today, diff), "yyyy-MM-dd");
+        setSelectedDate(newDate);
+      }} />
 
-      <div className="mt-3 mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-        <CalendarDays className="h-4 w-4" />
-        <span className="capitalize">{formattedDate}</span>
-      </div>
-
-      <div className="space-y-3">
+      <div className="space-y-3 mt-4">
         {loadingSessions || loadingBookings ? (
           Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
         ) : sortedSessions.length === 0 ? (

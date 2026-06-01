@@ -39,12 +39,32 @@ export default function MyBookings() {
   });
 
   const handleCancel = async (booking) => {
+    // Verificar janela de cancelamento
+    if (booking.session_time) {
+      const [h, m] = booking.session_time.split(":").map(Number);
+      const classDateTime = new Date(`${booking.session_date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+      const diffMs = classDateTime - new Date();
+      if (diffMs <= 0) {
+        toast.error("Esta aula já passou, não é possível cancelar.", { duration: 5000 });
+        return;
+      }
+      if (diffMs <= 4 * 60 * 60 * 1000) {
+        toast.error("Cancelamento não permitido: faltam menos de 4 horas para a aula.", { duration: 5000 });
+        return;
+      }
+    }
     try {
+      // Devolver crédito
+      const [userData] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
+      if (userData?.id && user?.role !== "admin") {
+        await base44.entities.User.update(userData.id, { credits: (userData.credits || 0) + 1 });
+      }
       queryClient.invalidateQueries({ queryKey: ["myAllBookings"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
-      toast.success("Reserva cancelada");
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      toast.success("Reserva cancelada e crédito devolvido!");
     } catch {
       toast.error("Erro ao cancelar");
     }

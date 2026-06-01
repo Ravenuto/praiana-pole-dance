@@ -155,7 +155,7 @@ export default function SessionCard({
               {sessionBookings.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                    Na aula ({sessionBookings.length})
+                    Confirmadas ({sessionBookings.length})
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {sessionBookings.map((b) => (

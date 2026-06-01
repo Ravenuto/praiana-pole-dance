@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import CommentItem from "@/components/shared/CommentItem";
+import { createNotification } from "@/hooks/useNotifications";
 
 const noticeStyle = { bg: "bg-primary/10", border: "border-primary/30", text: "text-primary", badge: "bg-primary/15 text-primary" };
 
@@ -31,7 +32,6 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", notice.id],
     queryFn: () => base44.entities.Comment.filter({ post_id: notice.id }, "created_date", 100),
-    enabled: showComments,
   });
 
   const handleLike = async () => {
@@ -40,6 +40,22 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
       : [...likes, currentUser?.email];
     await base44.entities.Notice.update(notice.id, { likes: newLikes });
     queryClient.invalidateQueries({ queryKey: ["notices"] });
+    // Notificar admins sobre curtida
+    if (!liked) {
+      const admins = await base44.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        if (admin.email !== currentUser?.email) {
+          createNotification({
+            user_email: admin.email,
+            type: "like",
+            title: `${currentUser?.full_name || currentUser?.email} curtiu um recado`,
+            message: notice.title,
+            link: "/recados",
+            actor_name: currentUser?.full_name || currentUser?.email,
+          });
+        }
+      }
+    }
   };
 
   const handleComment = async () => {
@@ -54,6 +70,20 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
     });
     setCommentText("");
     queryClient.invalidateQueries({ queryKey: ["comments", notice.id] });
+    // Notificar admins sobre comentário
+    const admins = await base44.entities.User.filter({ role: "admin" });
+    for (const admin of admins) {
+      if (admin.email !== currentUser?.email) {
+        createNotification({
+          user_email: admin.email,
+          type: "comment",
+          title: `${currentUser?.full_name || currentUser?.email} comentou em um recado`,
+          message: commentText.trim().substring(0, 80),
+          link: "/recados",
+          actor_name: currentUser?.full_name || currentUser?.email,
+        });
+      }
+    }
     setSendingComment(false);
   };
 
@@ -109,14 +139,14 @@ export default function NoticeCard({ notice, currentUser, isAdmin, onTogglePin, 
           }`}
         >
           <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
-          {likes.length > 0 && <span>{likes.length}</span>}
+          <span>{likes.length}</span>
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
           className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <MessageCircle className="h-4 w-4" />
-          {comments.length > 0 && <span>{comments.length}</span>}
+          <span>{comments.length}</span>
         </button>
       </div>
 

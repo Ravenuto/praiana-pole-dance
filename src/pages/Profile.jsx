@@ -170,10 +170,7 @@ export default function Profile() {
             />
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4 text-center col-span-2">
-          <p className="text-xs text-muted-foreground mb-1">Aulas realizadas este mês</p>
-          <p className="font-heading text-xl font-bold">{usedThisMonth}</p>
-        </div>
+
       </div>
 
       {/* Formulário */}
