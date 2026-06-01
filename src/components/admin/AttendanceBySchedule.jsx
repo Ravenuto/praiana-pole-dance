@@ -135,9 +135,9 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   return (
     <div>
       {/* Navegação da semana */}
-      <div className="flex items-center justify-center gap-2 mb-2">
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-1 hover:bg-muted rounded transition-colors">
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center justify-center gap-3 mb-2">
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-2 hover:bg-muted rounded transition-colors">
+          <ChevronLeft className="h-5 w-5 text-primary" />
         </button>
         <div className="flex gap-1">
           {weekDays.map((day) => {
@@ -161,10 +161,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
             );
           })}
         </div>
-        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-1 hover:bg-muted rounded transition-colors">
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-2 hover:bg-muted rounded transition-colors">
+          <ChevronRight className="h-5 w-5 text-primary" />
         </button>
-      </div>
+        </div>
       <div className="flex items-center justify-center gap-6 mb-3">
         <p className="text-xs text-muted-foreground capitalize flex-1 text-left">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
         <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-7 text-xs w-32" />
