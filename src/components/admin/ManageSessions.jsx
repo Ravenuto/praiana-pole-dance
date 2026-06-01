@@ -126,7 +126,7 @@ export default function ManageSessions() {
               <div>
                 <Label>Tipo de Aula *</Label>
                 <div className="mt-1.5 grid grid-cols-2 gap-2">
-                  {[{ v: "weekly", label: "Semanal (grade fixa)" }, { v: "once", label: "Aula única (reposição)" }].map(({ v, label }) => (
+                  {[{ v: "weekly", label: "Semanal (grade fixa)" }, { v: "once", label: "Aula única" }].map(({ v, label }) => (
                     <button
                       key={v}
                       type="button"

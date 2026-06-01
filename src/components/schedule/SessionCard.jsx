@@ -154,9 +154,6 @@ export default function SessionCard({
             <div className="border-t border-border bg-muted/20 px-4 py-3 space-y-3">
               {sessionBookings.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                    Confirmadas ({sessionBookings.length})
-                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {sessionBookings.map((b) => (
                       <span key={b.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">

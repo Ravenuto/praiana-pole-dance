@@ -181,7 +181,7 @@ export default function Schedule() {
           type: "booking_made",
           title: `${user?.full_name || user?.email} reservou uma aula`,
           message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
-          link: "/admin",
+          link: `/admin?aba=presencas&data=${selectedDate}`,
           actor_name: user?.full_name || user?.email,
         });
       }
@@ -227,7 +227,7 @@ export default function Schedule() {
           type: "booking_cancelled",
           title: `${user?.full_name || user?.email} cancelou uma aula`,
           message: `${session.class_type_name} — ${dataBR} às ${session.time}`,
-          link: "/admin",
+          link: `/admin?aba=presencas&data=${selectedDate}`,
           actor_name: user?.full_name || user?.email,
         });
       }

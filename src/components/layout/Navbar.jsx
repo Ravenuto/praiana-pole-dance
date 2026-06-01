@@ -90,6 +90,15 @@ export default function Navbar() {
             <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+            {/* Sino fora do menu mobile */}
+            <Link to="/notificacoes" className="relative p-2">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>

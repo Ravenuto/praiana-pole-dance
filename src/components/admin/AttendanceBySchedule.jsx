@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,11 +42,21 @@ const statusOptions = [
   { value: "cancelada", label: "Cancelada", cls: "bg-muted text-muted-foreground" },
 ];
 
-export default function AttendanceBySchedule() {
+export default function AttendanceBySchedule({ initialDate = "" }) {
   const queryClient = useQueryClient();
   const [selectedDay, setSelectedDay] = useState(getTodayKey());
   const [expandedSession, setExpandedSession] = useState(null);
-  const [dateOverride, setDateOverride] = useState("");
+  const [dateOverride, setDateOverride] = useState(initialDate);
+
+  // Sincronizar dia da semana se vier uma data inicial
+  useEffect(() => {
+    if (initialDate) {
+      const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      const d = new Date(initialDate + "T12:00:00");
+      setSelectedDay(days[d.getDay()]);
+      setDateOverride(initialDate);
+    }
+  }, [initialDate]);
   const [addStudentDialog, setAddStudentDialog] = useState(null); // { session }
   const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
   const [addingStudent, setAddingStudent] = useState(false);
@@ -201,27 +211,36 @@ export default function AttendanceBySchedule() {
                       <p className="text-center text-muted-foreground text-sm py-6">Nenhuma reserva</p>
                     ) : (
                       <div className="divide-y divide-border">
-                        {sessionBookings.map((booking) => {
-                          const statusOpt = statusOptions.find((s) => s.value === booking.status) || statusOptions[0];
-                          return (
-                            <div key={booking.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm truncate">{booking.student_name || "—"}</p>
-                                <p className="text-xs text-muted-foreground truncate">{booking.student_email}</p>
+                        {(() => {
+                          // Agrupar por email: mostrar apenas a reserva mais recente/ativa por aluna
+                          const seen = new Set();
+                          const unique = sessionBookings.filter((b) => {
+                            if (seen.has(b.student_email)) return false;
+                            seen.add(b.student_email);
+                            return true;
+                          });
+                          return unique.map((booking) => {
+                            const statusOpt = statusOptions.find((s) => s.value === booking.status) || statusOptions[0];
+                            return (
+                              <div key={booking.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm truncate">{booking.student_name || "—"}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{booking.student_email}</p>
+                                </div>
+                                <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
+                                  <SelectTrigger className="w-32 h-7 text-xs">
+                                    <Badge className={`${statusOpt.cls} border-0 text-xs`}>{statusOpt.label}</Badge>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {statusOptions.map((opt) => (
+                                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
-                              <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
-                                <SelectTrigger className="w-32 h-7 text-xs">
-                                  <Badge className={`${statusOpt.cls} border-0 text-xs`}>{statusOpt.label}</Badge>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {statusOptions.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                       </div>
                     )}
                   </div>

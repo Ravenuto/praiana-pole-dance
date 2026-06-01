@@ -148,10 +148,6 @@ export default function ManageClassTypes() {
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
-              <div>
-                <Label>Cor</Label>
-                <Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="h-10 w-20" />
-              </div>
               <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Salvar Alterações" : "Criar Modalidade"}
               </Button>

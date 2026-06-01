@@ -44,6 +44,21 @@ export default function NewPostForm({ currentUser }) {
     }
     await base44.entities.Post.create(postData);
     queryClient.invalidateQueries({ queryKey: ["posts"] });
+    // Notificar admins sobre novo post no feed
+    const admins = await base44.entities.User.filter({ role: "admin" });
+    for (const admin of admins) {
+      if (admin.email !== currentUser?.email) {
+        await base44.entities.Notification.create({
+          user_email: admin.email,
+          type: "new_post",
+          title: `${currentUser?.full_name || currentUser?.email} publicou no feed`,
+          message: caption.trim() ? caption.trim().substring(0, 80) : "Nova foto/vídeo publicada",
+          link: "/feed",
+          read: false,
+          actor_name: currentUser?.full_name || currentUser?.email,
+        });
+      }
+    }
     setCaption("");
     setFile(null);
     setPreview(null);

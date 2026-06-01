@@ -50,19 +50,19 @@ export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, on
         <ChevronLeft className="h-4 w-4 text-muted-foreground" />
       </button>
 
-      <div className="grid grid-cols-7 gap-1 flex-1">
+      <div className="grid grid-cols-7 gap-0.5 flex-1">
         {weekDays.map((day) => {
           const dateStr = format(day, "yyyy-MM-dd");
           const isSelected = dateStr === selectedDate;
           const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
-          const dayLabel = format(day, "EEE", { locale: ptBR });
+          const dayLabel = format(day, "EEEEE", { locale: ptBR }); // letra única: S, T, Q...
           const dayNum = format(day, "d");
 
           return (
             <button
               key={dateStr}
               onClick={() => onSelectDate && onSelectDate(dateStr)}
-              className={`flex flex-col items-center justify-center rounded-xl py-2 px-1 text-center transition-colors font-body ${
+              className={`flex flex-col items-center justify-center rounded-xl py-2 px-0.5 text-center transition-colors font-body min-w-0 ${
                 isSelected
                   ? "bg-primary text-primary-foreground"
                   : isToday
@@ -70,8 +70,8 @@ export default function DaySelector({ selectedDate, onSelectDate, weekAnchor, on
                   : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
               }`}
             >
-              <span className="text-[10px] font-medium capitalize">{dayLabel}</span>
-              <span className="text-sm font-bold">{dayNum}</span>
+              <span className="text-[10px] font-medium capitalize leading-none">{dayLabel}</span>
+              <span className="text-sm font-bold leading-tight">{dayNum}</span>
             </button>
           );
         })}

@@ -136,8 +136,18 @@ export default function PostCard({ post, currentUser, onDelete }) {
         )
       )}
 
-      {/* Actions */}
-      <div className="px-4 pt-3 pb-1">
+      {/* Caption — sempre abaixo da mídia */}
+      {post.caption && (
+        <div className="px-4 pt-3">
+          <p className="text-sm">
+            <span className="font-semibold mr-1">{post.author_name || post.author_email}</span>
+            {post.caption}
+          </p>
+        </div>
+      )}
+
+      {/* Actions — sempre abaixo da caption */}
+      <div className="px-4 pt-2 pb-1">
         <div className="flex items-center gap-4">
           <button
             onClick={handleLike}
@@ -156,14 +166,6 @@ export default function PostCard({ post, currentUser, onDelete }) {
             <span>{comments.length}</span>
           </button>
         </div>
-
-        {/* Caption */}
-        {post.caption && (
-          <p className="mt-2 text-sm">
-            <span className="font-semibold mr-1">{post.author_name || post.author_email}</span>
-            {post.caption}
-          </p>
-        )}
       </div>
 
       {/* Comments */}

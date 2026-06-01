@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
 import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck } from "lucide-react";
@@ -21,6 +21,18 @@ const TABS = [
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("sessions");
+  const [presencasDate, setPresencasDate] = useState("");
+
+  // Ler query params ao carregar (ex: ?aba=presencas&data=2024-06-01)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const aba = params.get("aba");
+    const data = params.get("data");
+    if (aba === "presencas") {
+      setActiveTab("attendance");
+      if (data) setPresencasDate(data);
+    }
+  }, []);
 
   if (user?.role !== "admin") {
     return <Navigate to="/" replace />;
@@ -58,7 +70,7 @@ export default function AdminDashboard() {
         {activeTab === "bookings"    && <ManageBookings />}
         {activeTab === "plans"       && <ManagePlansAdmin />}
         {activeTab === "students"    && <ManageStudents />}
-        {activeTab === "attendance"  && <AttendanceBySchedule />}
+        {activeTab === "attendance"  && <AttendanceBySchedule initialDate={presencasDate} />}
       </div>
     </div>
   );
