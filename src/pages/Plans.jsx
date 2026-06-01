@@ -23,64 +23,64 @@ export default function Plans() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 font-body">
       <div className="mb-8 text-center">
-        <h1 className="font-heading text-3xl font-bold">Planos</h1>
-        <p className="mt-2 text-muted-foreground">Escolha o plano ideal para você e entre em contato pelo WhatsApp</p>
-      </div>
+         <h1 className="font-heading text-xl font-semibold">Planos</h1>
+         <p className="mt-2 text-muted-foreground text-xs">Escolha o plano ideal para você e entre em contato pelo WhatsApp</p>
+       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-64 rounded-2xl" />)}
-        </div>
-      ) : sorted.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p>Nenhum plano disponível no momento.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {sorted.map((plan) => (
-            <div
-              key={plan.id}
-              className={`rounded-2xl border-2 p-6 flex flex-col gap-4 relative ${
-                plan.highlight
-                  ? "border-primary bg-primary/5 shadow-lg"
-                  : "border-border bg-card"
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    Mais popular
-                  </span>
-                </div>
-              )}
-              <div>
-                <p className="font-heading text-xl font-bold">{plan.label}</p>
-                <p className="text-3xl font-bold font-heading mt-1">{plan.price}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{plan.per_class}</p>
-              </div>
-              {plan.benefits?.length > 0 && (
-                <ul className="space-y-2 flex-1">
-                  {plan.benefits.map((b, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <a href={getWhatsappLink(plan.label)} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full rounded-full gap-2" variant={plan.highlight ? "default" : "outline"}>
-                  <MessageCircle className="h-4 w-4" /> Quero este plano
-                </Button>
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
+       {isLoading ? (
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+           {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+         </div>
+       ) : sorted.length === 0 ? (
+         <div className="text-center py-16 text-muted-foreground">
+           <p className="text-sm">Nenhum plano disponível no momento.</p>
+         </div>
+       ) : (
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+           {sorted.map((plan) => (
+             <div
+               key={plan.id}
+               className={`rounded-xl border p-4 flex flex-col gap-3 relative ${
+                 plan.highlight
+                   ? "border-primary bg-primary/5 shadow-md"
+                   : "border-border bg-card"
+               }`}
+             >
+               {plan.highlight && (
+                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                   <span className="bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                     Mais popular
+                   </span>
+                 </div>
+               )}
+               <div>
+                 <p className="font-heading text-sm font-semibold">{plan.label}</p>
+                 <p className="text-xl font-bold font-heading mt-1">{plan.price}</p>
+                 <p className="text-[11px] text-muted-foreground mt-0.5">{plan.per_class}</p>
+               </div>
+               {plan.benefits?.length > 0 && (
+                 <ul className="space-y-1.5 flex-1">
+                   {plan.benefits.map((b, i) => (
+                     <li key={i} className="flex items-center gap-1.5 text-xs">
+                       <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                       {b}
+                     </li>
+                   ))}
+                 </ul>
+               )}
+               <a href={getWhatsappLink(plan.label)} target="_blank" rel="noopener noreferrer">
+                 <Button className="w-full rounded-full gap-2 h-8 text-xs" variant={plan.highlight ? "default" : "outline"}>
+                   <MessageCircle className="h-3.5 w-3.5" /> Quero este plano
+                 </Button>
+               </a>
+             </div>
+           ))}
+         </div>
+       )}
 
-      <p className="text-center text-xs text-muted-foreground mt-8">
-        Para contratar ou renovar seu plano, entre em contato via WhatsApp. Será um prazer te atender!
-      </p>
+      <p className="text-center text-[11px] text-muted-foreground mt-6">
+         Para contratar ou renovar seu plano, entre em contato via WhatsApp. Será um prazer te atender!
+       </p>
     </div>
   );
 }

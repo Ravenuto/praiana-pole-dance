@@ -92,8 +92,8 @@ export default function Notices() {
     <div className="max-w-3xl mx-auto px-4 py-8 font-body">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-bold">Recados</h1>
-          <p className="mt-1 text-muted-foreground text-sm">Avisos e informações do estúdio</p>
+          <h1 className="font-heading text-xl font-semibold">Recados</h1>
+          <p className="mt-1 text-muted-foreground text-xs">Avisos e informações do estúdio</p>
         </div>
         {isAdmin && (
           <div className="flex gap-2">

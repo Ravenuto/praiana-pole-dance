@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, X, Clock, Users, ChevronDown, ChevronUp, UserPlus, Loader2 } from "lucide-react";
+import { Check, X, Clock, Users, ChevronDown, ChevronUp, UserPlus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 const DAYS = [
@@ -43,32 +43,26 @@ const statusOptions = [
 ];
 
 export default function AttendanceBySchedule({ initialDate = "" }) {
-  const queryClient = useQueryClient();
-  const [selectedDay, setSelectedDay] = useState(getTodayKey());
-  const [expandedSession, setExpandedSession] = useState(null);
-  const [dateOverride, setDateOverride] = useState(initialDate);
+   const queryClient = useQueryClient();
+   const [expandedSession, setExpandedSession] = useState(null);
+   const [weekAnchor, setWeekAnchor] = useState(() => {
+     if (initialDate) return new Date(initialDate + "T12:00:00");
+     return new Date();
+   });
+   const [selectedDate, setSelectedDate] = useState(initialDate || format(new Date(), "yyyy-MM-dd"));
+   const [addStudentDialog, setAddStudentDialog] = useState(null);
+   const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
+   const [addingStudent, setAddingStudent] = useState(false);
 
-  // Sincronizar dia da semana com a data selecionada
-  useEffect(() => {
-    const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-    const dateToUse = dateOverride || initialDate;
-    if (dateToUse) {
-      const d = new Date(dateToUse + "T12:00:00");
-      setSelectedDay(days[d.getDay()]);
-      if (!dateOverride) setDateOverride(dateToUse);
-    }
-  }, [dateOverride, initialDate]);
-  const [addStudentDialog, setAddStudentDialog] = useState(null); // { session }
-  const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
-  const [addingStudent, setAddingStudent] = useState(false);
-
-  const selectedDate = dateOverride || getDateForDay(selectedDay);
+   const selectedDayKey = useMemo(() => {
+     const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+     return days[new Date(selectedDate + "T12:00:00").getDay()];
+   }, [selectedDate]);
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
-    queryKey: ["adminSessions", selectedDay, selectedDate],
+    queryKey: ["adminSessions", selectedDayKey],
     queryFn: async () => {
-      const all = await base44.entities.ClassSession.filter({ day_of_week: selectedDay, is_active: true });
-      // Filtra por data: remove aulas canceladas para este dia
+      const all = await base44.entities.ClassSession.filter({ day_of_week: selectedDayKey, is_active: true });
       return all.filter(s => {
         if (s.cancelled_dates && s.cancelled_dates.includes(selectedDate)) return false;
         return true;
@@ -134,34 +128,44 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
 
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
 
+  // Renderizar semana (igual ao Schedule)
+  const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 0 });
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
   return (
     <div>
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5">
-        <div className="flex gap-1 flex-wrap">
-          {DAYS.map((d) => (
-            <button
-              key={d.key}
-              onClick={() => { setSelectedDay(d.key); setDateOverride(""); }}
-              className={`px-2.5 py-1 text-[11px] rounded-lg font-medium transition-colors ${
-                selectedDay === d.key && !dateOverride ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
+      {/* Navegação da semana */}
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, -7))} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <div className="flex gap-1">
+          {weekDays.map((day) => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            const isSelected = dateStr === selectedDate;
+            const dayLabel = format(day, "EEE", { locale: ptBR });
+            const dayNum = format(day, "d");
+            return (
+              <button
+                key={dateStr}
+                onClick={() => setSelectedDate(dateStr)}
+                className={`flex flex-col items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                <span className="capitalize text-[10px]">{dayLabel}</span>
+                <span className="font-semibold">{dayNum}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            value={dateOverride}
-            onChange={(e) => { setDateOverride(e.target.value); }}
-            className="w-32 h-8 text-[10px]"
-          />
-          {dateOverride && <span className="text-[10px] text-muted-foreground whitespace-nowrap">{format(new Date(dateOverride + "T12:00:00"), "dd/MM/yyyy")}</span>}
-        </div>
+        <button onClick={() => setWeekAnchor(addDays(weekAnchor, 7))} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3 capitalize">{formattedDate}</p>
+      <p className="text-xs text-muted-foreground mb-4 capitalize">{format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
 
       {loadingSessions ? (
         Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl mb-3" />)
