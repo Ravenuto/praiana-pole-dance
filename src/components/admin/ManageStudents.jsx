@@ -188,6 +188,9 @@ export default function ManageStudents() {
     });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     queryClient.invalidateQueries({ queryKey: ["userCredits", student.email] });
+    queryClient.invalidateQueries({ queryKey: ["myProfile", student.email] });
+    queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    queryClient.invalidateQueries({ queryKey: ["sessions"] });
     toast.success("Créditos atualizados!");
     setSavingCredit(false);
     setCreditDialog(null);
@@ -280,6 +283,9 @@ export default function ManageStudents() {
     });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     queryClient.invalidateQueries({ queryKey: ["userCredits"] });
+    queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+    queryClient.invalidateQueries({ queryKey: ["sessions"] });
     toast.success("Dados salvos!");
     setSavingEdit(false);
     setEditDialog(null);
