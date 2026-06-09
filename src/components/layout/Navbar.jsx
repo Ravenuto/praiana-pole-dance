@@ -164,8 +164,8 @@ export default function Navbar() {
         )}
         
         <div 
-          className={`fixed left-0 top-14 h-screen w-64 bg-card border-r border-border overflow-y-auto z-40 md:hidden transition-all duration-300 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          className={`fixed right-0 top-14 h-screen w-64 bg-card border-l border-border overflow-y-auto z-40 md:hidden transition-all duration-300 ${
+            sidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <div className="p-4 space-y-2 flex flex-col h-full">
