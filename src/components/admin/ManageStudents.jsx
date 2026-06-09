@@ -293,15 +293,6 @@ export default function ManageStudents() {
           <h3 className="font-medium flex items-center gap-2">
             <UserPlus className="h-4 w-4 text-primary" /> Cadastrar nova aluna
           </h3>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleCreateTestStudent}
-            disabled={creatingTestStudent}
-            className="text-xs"
-          >
-            {creatingTestStudent ? <Loader2 className="h-3 w-3 animate-spin" /> : "Criar aluna de teste"}
-          </Button>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button onClick={() => setManualDialog(true)} className="gap-2 flex-1">

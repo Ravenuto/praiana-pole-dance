@@ -119,10 +119,15 @@ export default function Login() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Não tem conta?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Criar conta
-          </Link>
+          Quer se matricular?{" "}
+          <a
+            href="https://wa.me/5500000000000"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary font-medium hover:underline"
+          >
+            Entre em contato pelo WhatsApp
+          </a>
         </p>
       </div>
     </div>

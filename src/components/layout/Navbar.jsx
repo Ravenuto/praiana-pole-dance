@@ -7,7 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
   Menu, X, LogOut,
-  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell } from
+  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings } from
 "lucide-react";
 
 const NAV_LINKS = [
@@ -18,7 +18,8 @@ const NAV_LINKS = [
 { to: "/feed", label: "Feed", icon: ImageIcon },
 { to: "/planos", label: "Planos", icon: CreditCard },
 { to: "/notificacoes", label: "Notif.", icon: Bell, hideInMobile: true },
-{ to: "/perfil", label: "Perfil", icon: User }];
+{ to: "/perfil", label: "Perfil", icon: User },
+{ to: "/configuracoes", label: "Config.", icon: Settings }];
 
 
 const ADMIN_LINK = { to: "/admin", label: "Admin", icon: ShieldCheck };

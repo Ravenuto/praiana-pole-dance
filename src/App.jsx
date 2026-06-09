@@ -21,6 +21,7 @@ import Notices from '@/pages/Notices';
 import Profile from '@/pages/Profile';
 import Plans from '@/pages/Plans';
 import Notifications from '@/pages/Notifications';
+import Settings from '@/pages/Settings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -36,13 +37,13 @@ const AuthenticatedApp = () => {
 
   // Handle authentication errors
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
+    if (authError.type === 'auth_required') {
       navigateToLogin();
       return null;
     }
+    // Para qualquer outro erro (user_not_registered, etc.), redireciona pro login
+    navigateToLogin();
+    return null;
   }
 
   // Render the main app
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
           <Route path="/perfil" element={<Profile />} />
           <Route path="/planos" element={<Plans />} />
           <Route path="/notificacoes" element={<Notifications />} />
+          <Route path="/configuracoes" element={<Settings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
