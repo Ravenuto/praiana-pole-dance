@@ -372,23 +372,28 @@ export default function ManageStudents() {
                 {/* Linha principal */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-primary font-bold shrink-0 ${isActive ? "bg-primary/10" : "bg-muted"}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-primary font-bold text-base shrink-0 ${isActive ? "bg-primary/10" : "bg-muted"}`}>
                       {(student.full_name || student.email || "?")[0].toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-sm truncate">{student.full_name || "—"}</p>
+                        <p className="font-semibold text-base truncate leading-tight">{student.full_name || <span className="text-muted-foreground italic text-sm">Sem nome</span>}</p>
                         {student.is_invited && <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">Convite pendente</Badge>}
                         {isActive && !student.is_invited && <Badge className="bg-green-100 text-green-700 border-0 text-xs">Ativa</Badge>}
                         {!isActive && !student.is_invited && <Badge className="bg-red-100 text-red-700 border-0 text-xs">Inativa</Badge>}
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{student.email}</p>
-                      {student.plan_start_date && (
-                        <p className="text-xs text-muted-foreground">
-                          Plano desde{" "}
-                          {format(new Date(student.plan_start_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{student.email}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0 mt-0.5">
+                        {student.phone && <p className="text-xs text-muted-foreground">{student.phone}</p>}
+                        {student.plan_start_date && (
+                          <p className="text-xs text-muted-foreground">
+                            Plano desde {format(new Date(student.plan_start_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        )}
+                        {(student.credits != null) && !student.is_invited && (
+                          <p className="text-xs text-muted-foreground">{student.credits} crédito{student.credits !== 1 ? "s" : ""}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
