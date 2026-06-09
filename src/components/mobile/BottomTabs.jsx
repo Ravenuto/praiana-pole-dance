@@ -10,18 +10,17 @@ export default function BottomTabs() {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const primaryTabs = [
-    { path: "/", label: "Início", icon: Home },
     { path: "/aulas", label: "Agenda", icon: Calendar },
+    { path: "/recados", label: "Recados", icon: Megaphone },
     { path: "/feed", label: "Feed", icon: Zap },
     { path: "/perfil", label: "Perfil", icon: User },
   ];
 
   const moreTabs = [
     { path: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
-    { path: "/recados", label: "Recados", icon: Megaphone },
     { path: "/planos", label: "Planos", icon: CreditCard },
-    { path: "/configuracoes", label: "Configurações", icon: Settings },
     { path: "/sobre", label: "Sobre", icon: Info },
+    { path: "/configuracoes", label: "Configurações", icon: Settings },
     ...(user?.role === "admin" ? [{ path: "/admin", label: "Admin", icon: ShieldCheck }] : []),
   ];
 
