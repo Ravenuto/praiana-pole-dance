@@ -237,18 +237,23 @@ export default function ManageStudents() {
   };
 
   const handleDeleteStudent = async (student) => {
-    if (!window.confirm(`Tem certeza que deseja deletar ${student.full_name || student.email}?`)) {
+    if (!window.confirm(`Tem certeza que deseja deletar ${student.full_name || student.email}? Ela poderá se cadastrar novamente do zero.`)) {
       return;
     }
     setDeletingStudent(student.id);
     try {
       if (student.is_invited) {
+        // Convite pendente: só deleta o registro de invitation
         await base44.entities.StudentInvitation.delete(student.id);
       } else {
-        await base44.entities.User.delete(student.id);
+        // Usuário real: deleta completamente via backend (auth + dados)
+        await base44.functions.invoke("deleteStudent", {
+          userId: student.id,
+          email: student.email,
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-      toast.success("Aluna deletada");
+      toast.success("Aluna deletada com sucesso");
     } catch {
       toast.error("Erro ao deletar aluna");
     }
