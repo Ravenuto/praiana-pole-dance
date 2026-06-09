@@ -69,7 +69,8 @@ export default function Profile() {
   const currentUser = userEntity || userData || user;
   const plan = entityData?.plan || currentUser?.plan || "4_aulas";
   const planData = planInfo[plan] || planInfo["4_aulas"];
-  const credits = entityData?.credits ?? currentUser?.credits ?? 0;
+  const vals = [entityData?.credits, entityData?.data?.credits, currentUser?.credits].filter(v => v !== undefined && v !== null);
+  const credits = vals.length > 0 ? Math.max(...vals) : 0;
   const maxCredits = planMaxCredits[plan] || 4;
   const usedThisMonth = monthBookings.length;
 
