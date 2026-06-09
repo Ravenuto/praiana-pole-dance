@@ -76,11 +76,12 @@ export default function Profile() {
   React.useEffect(() => {
     const source = userEntity || userData;
     if (source && !form) {
+      const d = source.data || {};
       setForm({
         full_name: source.full_name || user?.full_name || "",
-        phone: source.phone || "",
-        birth_date: source.birth_date || "",
-        profile_image_url: source.profile_image_url || "",
+        phone: d.phone || source.phone || "",
+        birth_date: d.birth_date || source.birth_date || "",
+        profile_image_url: d.profile_image_url || source.profile_image_url || "",
       });
     }
   }, [userEntity, userData]);
@@ -100,16 +101,22 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
-    if (!userData?.id) return;
+    if (!userEntity?.id) return;
     setSaving(true);
     try {
-      await base44.entities.User.update(userData.id, {
-        phone: form.phone,
-        birth_date: form.birth_date,
-        profile_image_url: form.profile_image_url,
+      // Salva campos pessoais dentro de data, preservando créditos e plano
+      const existingData = userEntity.data || {};
+      await base44.entities.User.update(userEntity.id, {
+        data: {
+          ...existingData,
+          phone: form.phone,
+          birth_date: form.birth_date,
+          profile_image_url: form.profile_image_url,
+        }
       });
       await base44.auth.updateMe({ full_name: form.full_name });
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userCredits"] });
       toast.success("Dados atualizados!");
     } catch {
       toast.error("Erro ao salvar");
@@ -181,23 +188,23 @@ export default function Profile() {
 
       {/* Datas do plano */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        {currentUser?.plan_start_date && (
+        {entityData?.plan_start_date && (
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <CalendarDays className="h-3 w-3" /> Início do plano
             </p>
             <p className="font-medium text-sm">
-              {format(new Date(currentUser.plan_start_date + "T12:00:00"), "dd/MM/yyyy")}
+              {format(new Date(entityData.plan_start_date + "T12:00:00"), "dd/MM/yyyy")}
             </p>
           </div>
         )}
-        {currentUser?.last_payment_date && (
+        {entityData?.last_payment_date && (
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
               <RefreshCw className="h-3 w-3" /> Última renovação
             </p>
             <p className="font-medium text-sm">
-              {format(new Date(currentUser.last_payment_date + "T12:00:00"), "dd/MM/yyyy")}
+              {format(new Date(entityData.last_payment_date + "T12:00:00"), "dd/MM/yyyy")}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Válido por 30 dias</p>
           </div>
