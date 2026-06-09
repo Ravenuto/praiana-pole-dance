@@ -29,10 +29,15 @@ Deno.serve(async (req) => {
 
     const user = users[0];
     const currentData = user.data || {};
+    
+    // Remover qualquer 'data' aninhado para evitar corrupção
+    const cleanData = Object.fromEntries(
+      Object.entries(currentData).filter(([k]) => k !== 'data')
+    );
 
     // Salvar SEMPRE dentro de data{} — nunca na raiz
     const newData = {
-      ...currentData,
+      ...cleanData,
       credits: invitation.credits || 4,
       plan: invitation.plan || '4_aulas',
       plan_start_date: new Date().toISOString().split('T')[0],

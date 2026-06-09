@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Zap } from "lucide-react";
+import { getCredits, getPlan } from "@/utils";
 
 export default function CreditBanner() {
   const { user } = useAuth();
@@ -24,13 +25,8 @@ export default function CreditBanner() {
 
   if (!user || user.role === "admin") return null;
 
-  // Resolver créditos mesmo se data estiver corrompido com data.data aninhado
-  const fromData = userData?.data?.credits;
-  const fromNested = userData?.data?.data?.credits;
-  const fromRoot = userData?.credits;
-  const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
-  const credits = vals.length > 0 ? Math.max(...vals) : 0;
-  const planLabel = userData?.data?.plan_label || userData?.data?.plan || userData?.plan_label || userData?.plan || "Plano de aulas";
+  const credits = getCredits(userData);
+  const planLabel = getPlan(userData) || "Plano de aulas";
   const noCredits = credits <= 0;
 
   return (

@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
     if (plan !== undefined) newData.plan = plan;
     if (plan_start_date !== undefined) newData.plan_start_date = plan_start_date;
 
-    // Usar base44 (user-scoped como admin) em vez de asServiceRole para update do User.data
-    await base44.entities.User.update(targetUser.id, { data: newData });
+    // Usar asServiceRole para garantir que sempre consegue atualizar
+    await base44.asServiceRole.entities.User.update(targetUser.id, { data: newData });
 
     console.log(`Atualizado ${targetUser.email}: credits=${newData.credits}, plan=${newData.plan}`);
 

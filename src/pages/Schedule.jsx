@@ -12,6 +12,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
+import { getCredits } from "@/utils";
 
 function getTodayDayKey() {
   const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
@@ -66,15 +67,6 @@ export default function Schedule() {
     return true;
   };
 
-  // Resolver créditos mesmo se data estiver corrompido com data.data aninhado
-  const getCredits = (u) => {
-    if (!u) return 0;
-    const fromData = u?.data?.credits;
-    const fromNested = u?.data?.data?.credits;
-    const fromRoot = u?.credits;
-    const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
-    return vals.length > 0 ? Math.max(...vals) : 0;
-  };
   const userCredits = getCredits(userData);
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
@@ -167,11 +159,7 @@ export default function Schedule() {
     try {
       // Buscar créditos FRESCOS do banco antes de qualquer operação
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const fromData = latestUser?.data?.credits;
-      const fromNested = latestUser?.data?.data?.credits;
-      const fromRoot = latestUser?.credits;
-      const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
-      const currentCredits = vals.length > 0 ? Math.max(...vals) : 0;
+      const currentCredits = getCredits(latestUser);
 
       if (user?.role !== "admin") {
         if (currentCredits <= 0) {
@@ -244,11 +232,7 @@ export default function Schedule() {
     try {
       // Buscar créditos frescos do banco
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const fromData2 = latestUser?.data?.credits;
-      const fromNested2 = latestUser?.data?.data?.credits;
-      const fromRoot2 = latestUser?.credits;
-      const vals2 = [fromData2, fromNested2, fromRoot2].filter(v => v !== undefined && v !== null);
-      const currentCredits = vals2.length > 0 ? Math.max(...vals2) : 0;
+      const currentCredits = getCredits(latestUser);
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
       // Devolver crédito IMEDIATAMENTE após cancelar (limpar data.data corrompido ao salvar)
       if (latestUser?.id && user?.role !== "admin") {

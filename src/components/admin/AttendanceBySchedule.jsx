@@ -12,6 +12,7 @@ import { format, addDays, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, X, Clock, Users, ChevronDown, ChevronUp, UserPlus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { getCredits } from "@/utils";
 
 const DAYS = [
   { key: "segunda", label: "Seg" }, { key: "terca", label: "Ter" },
@@ -129,10 +130,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
         }
 
         // Debitar crédito da aluna
-        const currentCredits = student.credits ?? 0;
-        if (currentCredits > 0) {
-          await base44.entities.User.update(student.id, { credits: currentCredits - 1 });
-        }
+         const currentCredits = getCredits(student);
+         if (currentCredits > 0) {
+           await base44.entities.User.update(student.id, { data: { ...student.data, credits: currentCredits - 1 } });
+         }
       }
 
       await base44.entities.Booking.create({
@@ -342,10 +343,11 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                   </Select>
                   {addStudentForm.selectedUserId && (() => {
                     const st = activeStudents.find(s => s.id === addStudentForm.selectedUserId);
+                    const credits = st ? getCredits(st) : 0;
                     return st ? (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Créditos atuais: <strong>{st.credits ?? 0}</strong>
-                        {(st.credits ?? 0) === 0 && <span className="text-destructive ml-1">(sem créditos)</span>}
+                        Créditos atuais: <strong>{credits}</strong>
+                        {credits === 0 && <span className="text-destructive ml-1">(sem créditos)</span>}
                       </p>
                     ) : null;
                   })()}
