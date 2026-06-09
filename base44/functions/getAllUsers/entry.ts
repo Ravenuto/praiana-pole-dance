@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     // Combinar usuários e convites
     // Aplanar user.data para a raiz para que credits, plan, phone, etc. sejam acessíveis diretamente
     const combinedUsers = [
-      ...allUsers.map(u => ({ ...u, ...(u.data || {}) })),
+      ...allUsers.map(u => ({ ...u, ...(u.data || {}), data: u.data || {} })),
       ...invitations.map(inv => ({
         id: inv.id,
         email: inv.email,
