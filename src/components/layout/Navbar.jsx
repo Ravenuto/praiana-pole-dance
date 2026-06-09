@@ -120,7 +120,7 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
                   isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
@@ -269,28 +269,20 @@ export default function Navbar() {
               );
             })}
 
-            {/* Admin group */}
+            {/* Admin Link */}
             {isAdmin && (
               <>
                 <div className="my-1 border-b border-border/30" />
-                <button
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
+                <Link
+                  to="/admin"
+                  onClick={handleNavClick}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive("/admin") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
                 >
                   <ShieldCheck className="h-5 w-5" />
-                  <span className="font-medium flex-1 text-left">Admin</span>
-                </button>
-                <div className="pl-8 py-1 space-y-1">
-                  <Link
-                    to="/admin"
-                    onClick={handleNavClick}
-                    className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                      isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </div>
+                  <span className="font-semibold">Admin</span>
+                </Link>
               </>
             )}
 
