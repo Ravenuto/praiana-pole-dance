@@ -59,6 +59,24 @@ export const AuthProvider = ({ children }) => {
               message: 'Authentication required'
             });
           } else if (reason === 'user_not_registered') {
+            // Verifica se o usuário foi aprovado pelo admin antes de bloquear
+            try {
+              const tokenEmail = appParams.token ? JSON.parse(atob(appParams.token.split('.')[1]))?.email : null;
+              if (tokenEmail) {
+                const res = await fetch('/api/functions/checkUserAccess', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-App-Id': appParams.appId, 'Authorization': `Bearer ${appParams.token}` },
+                  body: JSON.stringify({ email: tokenEmail })
+                });
+                const data = await res.json();
+                if (data.approved) {
+                  // Usuário aprovado pelo admin — registrar na plataforma e deixar entrar
+                  try { await base44.users.inviteUser(tokenEmail, 'user'); } catch (_) { /* já existe */ }
+                  window.location.reload();
+                  return;
+                }
+              }
+            } catch (_) { /* ignora erros e cai no fluxo normal */ }
             setAuthError({
               type: 'user_not_registered',
               message: 'User not registered for this app'
