@@ -127,21 +127,20 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Sidebar Overlay */}
+        {/* Mobile Sidebar - Always Rendered */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 top-14 z-30 bg-black/50 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
         <div 
-          className={`md:hidden fixed inset-0 top-14 z-30 bg-black/50 transition-opacity ${
-            sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-          onClick={() => setSidebarOpen(false)}
-        />
-
-        {/* Mobile Sidebar */}
-        <div 
-          className={`md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-40 transition-transform ${
+          className={`fixed left-0 top-14 h-screen w-64 bg-card border-r border-border overflow-y-auto z-40 md:hidden transition-all duration-300 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-4 space-y-1">
+          <div className="p-4 space-y-2 flex flex-col h-full">
             {/* Primary link */}
             <Link
               to="/"
@@ -150,7 +149,7 @@ export default function Navbar() {
                 isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
               }`}
             >
-              <Home className="h-6 w-6" />
+              <Home className="h-5 w-5" />
               <span className="font-medium">Início</span>
             </Link>
 
@@ -163,20 +162,20 @@ export default function Navbar() {
               return (
                 <div key={group.key}>
                   <button
-                    onClick={() => group.expandable && toggleGroup(group.key)}
+                    onClick={() => toggleGroup(group.key)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       isGroupActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
                     }`}
                   >
-                    <Icon className="h-6 w-6 flex-shrink-0" />
+                    <Icon className="h-5 w-5" />
                     <span className="font-medium flex-1 text-left">{group.label}</span>
                     {group.expandable && (
                       <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                     )}
                   </button>
 
-                  {/* Expanded submenu */}
-                  {group.expandable && isExpanded && (
+                  {/* Always show links for non-expandable, expand for expandable */}
+                  {(group.expandable ? isExpanded : true) && (
                     <div className="pl-8 py-1 space-y-1">
                       {group.links.map((link) => {
                         const LinkIcon = link.icon;
@@ -197,28 +196,7 @@ export default function Navbar() {
                     </div>
                   )}
 
-                  {!group.expandable && (
-                    <div className="pl-8 py-1 space-y-1">
-                      {group.links.map((link) => {
-                        const LinkIcon = link.icon;
-                        return (
-                          <Link
-                            key={link.to}
-                            to={link.to}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                              isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            <LinkIcon className="h-4 w-4" />
-                            {link.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="my-2 border-b border-border/50" />
+                  <div className="my-1 border-b border-border/30" />
                 </div>
               );
             })}
@@ -229,7 +207,7 @@ export default function Navbar() {
                 <button
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
                 >
-                  <ShieldCheck className="h-6 w-6 flex-shrink-0" />
+                  <ShieldCheck className="h-5 w-5" />
                   <span className="font-medium flex-1 text-left">Admin</span>
                 </button>
                 <div className="pl-8 py-1 space-y-1">
@@ -244,20 +222,19 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                 </div>
-                <div className="my-2 border-b border-border/50" />
               </>
             )}
 
             {/* Footer */}
-            <div className="mt-auto pt-4 border-t border-border">
-              <div className="px-4 py-3 text-xs text-muted-foreground">
+            <div className="mt-auto pt-3 border-t border-border">
+              <div className="px-4 py-2 text-xs text-muted-foreground truncate">
                 {user?.full_name || user?.email}
               </div>
               <button
                 onClick={() => base44.auth.logout()}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4" />
                 Sair
               </button>
             </div>
