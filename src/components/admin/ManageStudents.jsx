@@ -156,12 +156,15 @@ export default function ManageStudents() {
     if (student.is_invited) {
       await base44.entities.StudentInvitation.update(student.id, { plan, credits });
     } else {
-      await base44.entities.User.update(student.id, {
-        data: { ...(student.data || {}), plan, credits, plan_start_date: format(new Date(), "yyyy-MM-dd") }
+      await base44.functions.invoke("updateStudentCredits", {
+        userId: student.id,
+        credits,
+        plan,
+        plan_start_date: format(new Date(), "yyyy-MM-dd"),
       });
     }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    queryClient.invalidateQueries({ queryKey: ["userCredits"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits", student.email] });
     toast.success("Plano atualizado! Créditos resetados para " + credits);
   };
 
@@ -170,12 +173,13 @@ export default function ManageStudents() {
     setSavingCredit(true);
     const student = creditDialog.student;
     const newCredits = Math.max(0, (student.credits || 0) + creditValue);
-    // Salvar dentro de data{} que é onde o Base44 armazena os campos customizados
-    await base44.entities.User.update(student.id, {
-      data: { ...(student.data || {}), credits: newCredits }
+    // Usar função backend dedicada para evitar corrupção de data.data
+    await base44.functions.invoke("updateStudentCredits", {
+      userId: student.id,
+      credits: newCredits,
     });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
-    queryClient.invalidateQueries({ queryKey: ["userCredits"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits", student.email] });
     toast.success("Créditos atualizados!");
     setSavingCredit(false);
     setCreditDialog(null);
