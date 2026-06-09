@@ -15,6 +15,18 @@ export function ThemeProvider({ children }) {
     localStorage.setItem("praiana-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      const stored = localStorage.getItem("praiana-theme");
+      if (!stored) {
+        setTheme(mediaQuery.matches ? "dark" : "light");
+      }
+    };
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
   const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;

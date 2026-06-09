@@ -23,6 +23,7 @@ import Plans from '@/pages/Plans';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
 import About from '@/pages/About';
+import BottomTabs from '@/components/mobile/BottomTabs';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +68,7 @@ const AuthenticatedApp = () => {
           <Route path="/configuracoes" element={<Settings />} />
           <Route path="/sobre" element={<About />} />
         </Route>
+        <BottomTabs />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

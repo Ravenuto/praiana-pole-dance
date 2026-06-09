@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import NewPostForm from "@/components/feed/NewPostForm";
 import PostCard from "@/components/feed/PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Images } from "lucide-react";
+import { Images, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function Feed() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["posts"],
@@ -24,8 +26,28 @@ export default function Feed() {
     toast.success("Post excluído");
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["posts"] });
+    setIsRefreshing(false);
+  };
+
+  const { containerRef, isPulling } = usePullToRefresh(handleRefresh);
+
   return (
-    <div className="max-w-xl mx-auto px-4 py-8 font-body">
+    <div
+      ref={containerRef}
+      className="max-w-xl mx-auto px-4 py-8 font-body overflow-y-auto transition-transform"
+      style={{
+        transform: isPulling ? "translateY(20px)" : "translateY(0)",
+      }}
+    >
+      {isPulling && (
+        <div className="flex justify-center mb-4">
+          <RefreshCw className={`h-5 w-5 text-primary transition-transform ${isRefreshing ? "animate-spin" : ""}`} />
+        </div>
+      )}
+
       <div className="mb-6">
          <h1 className="font-heading text-xl font-semibold">Feed</h1>
          <p className="mt-1 text-muted-foreground text-xs">Compartilhe seus momentos no pole</p>

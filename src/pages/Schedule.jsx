@@ -8,11 +8,12 @@ import DaySelector from "@/components/schedule/DaySelector";
 import SessionCard from "@/components/schedule/SessionCard";
 import CreditBanner from "@/components/schedule/CreditBanner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
 import { getCredits } from "@/utils";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 function getTodayDayKey() {
   const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
@@ -32,6 +33,7 @@ export default function Schedule() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [loadingSession, setLoadingSession] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const selectedDay = useMemo(() => getDayKey(new Date(selectedDate + "T12:00:00")), [selectedDate]);
 
@@ -374,12 +376,37 @@ export default function Schedule() {
 
   const formattedDate = format(new Date(selectedDate + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR });
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["sessions"] }),
+      queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] }),
+      queryClient.invalidateQueries({ queryKey: ["userCredits"] }),
+    ]);
+    setIsRefreshing(false);
+  };
+
+  const { containerRef, isPulling } = usePullToRefresh(handleRefresh);
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 font-body">
+    <div
+      ref={containerRef}
+      className="max-w-4xl mx-auto px-4 sm:px-6 py-6 font-body overflow-y-auto transition-transform"
+      style={{
+        transform: isPulling ? "translateY(20px)" : "translateY(0)",
+      }}
+    >
+      {isPulling && (
+        <div className="flex justify-center mb-4">
+          <RefreshCw className={`h-5 w-5 text-primary transition-transform ${isRefreshing ? "animate-spin" : ""}`} />
+        </div>
+      )}
+
       <div className="mb-6">
-        <h1 className="font-heading text-2xl sm:text-3xl font-bold">Agendar Aula</h1>
-        <p className="mt-1 text-muted-foreground text-sm">Selecione o dia e reserve sua vaga</p>
-      </div>
+         <h1 className="font-heading text-2xl sm:text-3xl font-bold">Agendar Aula</h1>
+         <p className="mt-1 text-muted-foreground text-sm">Selecione o dia e reserve sua vaga</p>
+       </div>
 
       <CreditBanner />
 

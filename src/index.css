@@ -87,5 +87,10 @@
 
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior-y: none;
+  }
+
+  button, [role="button"], svg {
+    @apply select-none;
   }
 }

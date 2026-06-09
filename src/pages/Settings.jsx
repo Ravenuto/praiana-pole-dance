@@ -3,10 +3,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, BellOff, Loader2, Check, Lock } from "lucide-react";
+import { Bell, BellOff, Loader2, Check, Lock, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ChangePassword from "@/components/settings/ChangePassword";
 
 const NOTIFICATION_OPTIONS = [
@@ -25,6 +26,8 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("notifications");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["myProfile", user?.email],
@@ -83,7 +86,20 @@ export default function Settings() {
     toast.success("Todas as notificações desativadas!");
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await base44.auth.deleteMe();
+      toast.success("Conta deletada com sucesso");
+      await base44.auth.logout();
+    } catch (error) {
+      toast.error("Erro ao deletar conta");
+      setDeleting(false);
+    }
+  };
+
   return (
+    <>
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 font-body">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold">Configurações</h1>
@@ -165,6 +181,44 @@ export default function Settings() {
       {activeTab === "password" && (
         <ChangePassword />
       )}
-    </div>
-  );
-}
+
+      {/* Deletar Conta - sempre visível */}
+      <div className="mt-6 p-5 border border-destructive/30 bg-destructive/5 rounded-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-heading font-semibold text-base text-destructive">Deletar Conta</h3>
+            <p className="text-sm text-muted-foreground mt-1">Esta ação é irreversível e deletará todos os seus dados</p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={deleting}
+            className="gap-2 whitespace-nowrap"
+          >
+            <Trash2 className="h-4 w-4" />
+            Deletar
+          </Button>
+        </div>
+      </div>
+      </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Deletar conta permanentemente?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação é irreversível. Todos os seus dados serão deletados, incluindo reservas, histórico de pagamentos e preferências.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex justify-end gap-3">
+          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+            {deleting ? "Deletando..." : "Deletar Conta"}
+          </AlertDialogAction>
+        </div>
+      </AlertDialogContent>
+      </AlertDialog>
+      </>
+      );
+      }
