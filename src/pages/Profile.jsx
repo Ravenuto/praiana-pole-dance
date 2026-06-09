@@ -38,6 +38,7 @@ export default function Profile() {
     enabled: !!user?.email,
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: userData, isLoading } = useQuery({

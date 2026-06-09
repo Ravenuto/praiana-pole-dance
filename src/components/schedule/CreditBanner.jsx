@@ -19,6 +19,7 @@ export default function CreditBanner() {
     enabled: !!user?.email,
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   if (!user || user.role === "admin") return null;

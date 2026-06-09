@@ -45,6 +45,7 @@ export default function Schedule() {
     enabled: !!user?.email,
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Data mínima e máxima baseadas no plano

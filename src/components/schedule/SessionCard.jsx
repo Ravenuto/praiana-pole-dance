@@ -116,22 +116,15 @@ export default function SessionCard({
                 </Button>
               )
             ) : (
-              <div className="flex flex-col items-end gap-1">
-                <Button
-                  size="sm"
-                  onClick={onBook}
-                  disabled={isLoading || locked}
-                  className="rounded-full px-5 text-sm h-8"
-                  title={locked ? "Reservas encerradas (menos de 4h)" : !hasCredits ? "Sem créditos disponíveis" : ""}
-                >
-                  {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Reservar"}
-                </Button>
-                {!hasCredits && !locked && (
-                  <span className="text-[10px] text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> Sem créditos
-                  </span>
-                )}
-              </div>
+              <Button
+                size="sm"
+                onClick={onBook}
+                disabled={isLoading || locked}
+                className="rounded-full px-5 text-sm h-8"
+                title={locked ? "Reservas encerradas (menos de 4h)" : ""}
+              >
+                {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Reservar"}
+              </Button>
             )}
 
             {hasParticipants && (
