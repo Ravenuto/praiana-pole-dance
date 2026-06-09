@@ -52,7 +52,7 @@ export default function Schedule() {
   const planDates = useMemo(() => {
     const isAdmin = user?.role === "admin";
     if (isAdmin) return { min: null, max: null }; // admin sem restrição
-    const startStr = userData?.plan_start_date;
+    const startStr = userData?.data?.plan_start_date || userData?.plan_start_date;
     if (!startStr) return { min: null, max: null };
     const start = new Date(startStr + "T12:00:00");
     const end = addDays(start, 31); // 1 mês a partir do início do plano
