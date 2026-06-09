@@ -92,7 +92,10 @@ export default function Schedule() {
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
     queryKey: ["bookings", selectedDate],
-    queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate, status: "confirmada" }, "-created_date", 100)
+    queryFn: async () => {
+      const all = await base44.entities.Booking.filter({ session_date: selectedDate }, "-created_date", 100);
+      return all.filter(b => b.status !== 'cancelada'); // Não contar canceladas
+    }
   });
 
   const { data: allWaitlist = [] } = useQuery({

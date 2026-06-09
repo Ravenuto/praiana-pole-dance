@@ -12,18 +12,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 const STATUS_FILTERS = [
-  { key: "all", label: "Todas" },
-  { key: "confirmada", label: "Confirmadas", icon: Check, class: "bg-primary/10 text-primary border-primary/30" },
-  { key: "presente", label: "Presentes", icon: Check, class: "bg-green-100 text-green-700 border-green-300" },
-  { key: "faltou", label: "Faltei", icon: AlertCircle, class: "bg-destructive/10 text-destructive border-destructive/30" },
-  { key: "cancelada", label: "Canceladas", icon: X, class: "bg-muted text-muted-foreground border-border" },
+{ key: "all", label: "Todas" },
+{ key: "confirmada", label: "Confirmadas", icon: Check, class: "bg-primary/10 text-primary border-primary/30" },
+{ key: "presente", label: "Presentes", icon: Check, class: "bg-green-100 text-green-700 border-green-300" },
+{ key: "faltou", label: "Faltei", icon: AlertCircle, class: "bg-destructive/10 text-destructive border-destructive/30" },
 ];
 
 const statusConfig = {
-  confirmada: { label: "Confirmada", icon: Check, class: "bg-primary/10 text-primary" },
-  cancelada: { label: "Cancelada", icon: X, class: "bg-muted text-muted-foreground" },
-  presente: { label: "Presente", icon: Check, class: "bg-green-100 text-green-700" },
-  faltou: { label: "Faltou", icon: AlertCircle, class: "bg-destructive/10 text-destructive" },
+confirmada: { label: "Confirmada", icon: Check, class: "bg-primary/10 text-primary" },
+presente: { label: "Presente", icon: Check, class: "bg-green-100 text-green-700" },
+faltou: { label: "Faltou", icon: AlertCircle, class: "bg-destructive/10 text-destructive" },
 };
 
 export default function MyBookings() {
@@ -33,7 +31,10 @@ export default function MyBookings() {
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ["myAllBookings", user?.email],
-    queryFn: () => base44.entities.Booking.filter({ student_email: user?.email }, "-session_date", 100),
+    queryFn: async () => {
+      const all = await base44.entities.Booking.filter({ student_email: user?.email }, "-session_date", 100);
+      return all.filter(b => b.status !== 'cancelada'); // Não mostrar canceladas
+    },
     enabled: !!user?.email,
   });
 
