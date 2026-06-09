@@ -7,19 +7,8 @@ import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
   Menu, X, LogOut, ChevronDown,
-  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings } from
+  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users } from
 "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-
-const PRIMARY_LINKS = [
-  { to: "/", label: "Início", icon: Home }
-];
 
 const MINHA_CONTA_LINKS = [
   { to: "/perfil", label: "Perfil", icon: User },
@@ -37,50 +26,31 @@ const COMUNIDADE_LINKS = [
   { to: "/planos", label: "Planos", icon: CreditCard },
 ];
 
-const ADMIN_LINK = { to: "/admin", label: "Admin", icon: ShieldCheck };
+const SIDEBAR_GROUPS = [
+  { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: false },
+  { key: "comunidade", label: "Comunidade", icon: Users, links: COMUNIDADE_LINKS, expandable: true },
+  { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: false },
+];
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
   const { user } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
   const unreadCount = useUnreadCount(user?.email);
 
   const isActive = (path) => location.pathname === path;
-  
-  const renderNavGroup = (label, links, icon) => {
-    const Icon = icon;
-    const isGroupActive = links.some(link => isActive(link.to));
-    
-    return (
-      <DropdownMenu key={label}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-auto px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors gap-1 ${
-              isGroupActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            {label}
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {links.map((link) => {
-            const LinkIcon = link.icon;
-            return (
-              <DropdownMenuItem key={link.to} asChild>
-                <Link to={link.to} className="flex items-center gap-2 cursor-pointer">
-                  <LinkIcon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
+
+  const toggleGroup = (groupKey) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }));
+  };
+
+  const handleNavClick = () => {
+    setSidebarOpen(false);
   };
 
   return (
@@ -98,23 +68,37 @@ export default function Navbar() {
             <span className="font-heading text-base font-semibold tracking-tight">Praiana</span>
           </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-0.5">
-            {PRIMARY_LINKS.map((link) => (
+          {/* Desktop links - simple layout */}
+          <div className="hidden md:flex items-center gap-1">
+            <Link
+              to="/"
+              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                isActive("/") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              Início
+            </Link>
+            {SIDEBAR_GROUPS.map((group) => (
               <Link
-                key={link.to}
-                to={link.to}
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                key={group.key}
+                to={group.links[0].to}
+                className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                  group.links.some(l => isActive(l.to)) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
-                {link.label}
+                {group.label}
               </Link>
             ))}
-            {renderNavGroup("Minhas Aulas", MINHAS_AULAS_LINKS, CalendarDays)}
-            {renderNavGroup("Comunidade", COMUNIDADE_LINKS, Megaphone)}
-            {renderNavGroup("Minha Conta", MINHA_CONTA_LINKS, User)}
-            {isAdmin && renderNavGroup("Admin", [ADMIN_LINK], ShieldCheck)}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                  isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
           </div>
 
           {/* Desktop actions */}
@@ -129,7 +113,6 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <div className="flex items-center gap-1 md:hidden">
-            {/* Sino fora do menu mobile */}
             <Link to="/notificacoes" className="relative p-2">
               <Bell className="h-5 w-5 text-muted-foreground" />
               {unreadCount > 0 && (
@@ -138,81 +121,141 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {mobileOpen &&
-        <div className="md:hidden pb-4 pt-2">
-            <div className="grid grid-cols-3 gap-1.5 mb-3">
-              {PRIMARY_LINKS.map((link) => {
-                const Icon = link.icon;
-                const active = isActive(link.to);
+        {/* Mobile Sidebar */}
+        {sidebarOpen && (
+          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        )}
+        {sidebarOpen && (
+          <div className="md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-50">
+            <div className="p-4 space-y-1">
+              {/* Primary link */}
+              <Link
+                to="/"
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                }`}
+              >
+                <Home className="h-6 w-6" />
+                <span className="font-medium">Início</span>
+              </Link>
+
+              {/* Sidebar Groups */}
+              {SIDEBAR_GROUPS.map((group) => {
+                const Icon = group.icon;
+                const isExpanded = expandedGroups[group.key];
+                const isGroupActive = group.links.some(l => isActive(l.to));
+                
                 return (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setMobileOpen(false)}
-                    className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 rounded-xl text-center transition-colors ${
-                      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-[10px] font-medium leading-tight">{link.label}</span>
-                  </Link>
+                  <div key={group.key}>
+                    <button
+                      onClick={() => group.expandable && toggleGroup(group.key)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isGroupActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-6 w-6 flex-shrink-0" />
+                      <span className="font-medium flex-1 text-left">{group.label}</span>
+                      {group.expandable && (
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      )}
+                    </button>
+
+                    {/* Expanded submenu */}
+                    {group.expandable && isExpanded && (
+                      <div className="pl-8 py-1 space-y-1">
+                        {group.links.map((link) => {
+                          const LinkIcon = link.icon;
+                          return (
+                            <Link
+                              key={link.to}
+                              to={link.to}
+                              onClick={handleNavClick}
+                              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                                isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              <LinkIcon className="h-4 w-4" />
+                              {link.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!group.expandable && (
+                      <div className="pl-8 py-1 space-y-1">
+                        {group.links.map((link) => {
+                          const LinkIcon = link.icon;
+                          return (
+                            <Link
+                              key={link.to}
+                              to={link.to}
+                              onClick={handleNavClick}
+                              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                                isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              <LinkIcon className="h-4 w-4" />
+                              {link.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="my-2 border-b border-border/50" />
+                  </div>
                 );
               })}
-            </div>
-            <div className="space-y-1.5 mb-3">
-              {[
-                { label: "Minhas Aulas", links: MINHAS_AULAS_LINKS },
-                { label: "Comunidade", links: COMUNIDADE_LINKS },
-                { label: "Minha Conta", links: MINHA_CONTA_LINKS },
-                ...(isAdmin ? [{ label: "Admin", links: [ADMIN_LINK] }] : []),
-              ].map((group) => (
-                <DropdownMenu key={group.label}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-between h-8 text-xs"
+
+              {/* Admin group */}
+              {isAdmin && (
+                <>
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
+                  >
+                    <ShieldCheck className="h-6 w-6 flex-shrink-0" />
+                    <span className="font-medium flex-1 text-left">Admin</span>
+                  </button>
+                  <div className="pl-8 py-1 space-y-1">
+                    <Link
+                      to="/admin"
+                      onClick={handleNavClick}
+                      className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                        isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                      }`}
                     >
-                      {group.label}
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-40">
-                    {group.links.map((link) => {
-                      const Icon = link.icon;
-                      return (
-                        <DropdownMenuItem key={link.to} asChild>
-                          <Link to={link.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 cursor-pointer">
-                            <Icon className="h-4 w-4" />
-                            {link.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ))}
-            </div>
-            <div className="pt-2 border-t border-border flex items-center justify-between px-1">
-              <span className="text-xs text-muted-foreground truncate max-w-[60%]">
-                {user?.full_name || user?.email}
-              </span>
-              <button
-              onClick={() => base44.auth.logout()}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted">
-              
-                <LogOut className="h-3.5 w-3.5" /> Sair
-              </button>
+                      <ShieldCheck className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </div>
+                  <div className="my-2 border-b border-border/50" />
+                </>
+              )}
+
+              {/* Footer */}
+              <div className="mt-auto pt-4 border-t border-border">
+                <div className="px-4 py-3 text-xs text-muted-foreground">
+                  {user?.full_name || user?.email}
+                </div>
+                <button
+                  onClick={() => base44.auth.logout()}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Sair
+                </button>
+              </div>
             </div>
           </div>
-        }
+        )}
       </div>
     </nav>);
 
