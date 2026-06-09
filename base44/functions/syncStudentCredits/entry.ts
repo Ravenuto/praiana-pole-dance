@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -28,17 +28,18 @@ Deno.serve(async (req) => {
     }
 
     const user = users[0];
+    const currentData = user.data || {};
 
-    // Copiar dados do convite para o usuário se ainda não tem créditos
-    if (!user.credits || user.credits === 0) {
-      await base44.asServiceRole.entities.User.update(user.id, {
-        credits: invitation.credits || 4,
-        plan: invitation.plan || '4_aulas',
-        plan_start_date: new Date().toISOString().split('T')[0],
-      });
+    // Salvar SEMPRE dentro de data{} — nunca na raiz
+    const newData = {
+      ...currentData,
+      credits: invitation.credits || 4,
+      plan: invitation.plan || '4_aulas',
+      plan_start_date: new Date().toISOString().split('T')[0],
+    };
 
-      console.log(`Créditos sincronizados para ${invitation.email}: ${invitation.credits}`);
-    }
+    await base44.asServiceRole.entities.User.update(user.id, { data: newData });
+    console.log(`Créditos sincronizados para ${invitation.email}: ${invitation.credits}`);
 
     return Response.json({ success: true });
   } catch (error) {

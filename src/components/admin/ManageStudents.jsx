@@ -156,12 +156,15 @@ export default function ManageStudents() {
     if (student.is_invited) {
       await base44.entities.StudentInvitation.update(student.id, { plan, credits });
     } else {
-      await base44.functions.invoke("updateStudentCredits", {
-        userId: student.id,
-        credits,
-        plan,
-        plan_start_date: format(new Date(), "yyyy-MM-dd"),
-      });
+      const [freshUser] = await base44.entities.User.filter({ email: student.email }, "-created_date", 1);
+      if (freshUser) {
+        const cleanData = Object.fromEntries(
+          Object.entries(freshUser.data || {}).filter(([k]) => k !== 'data')
+        );
+        await base44.entities.User.update(freshUser.id, {
+          data: { ...cleanData, plan, credits, plan_start_date: format(new Date(), "yyyy-MM-dd") }
+        });
+      }
     }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     queryClient.invalidateQueries({ queryKey: ["userCredits", student.email] });
@@ -173,10 +176,15 @@ export default function ManageStudents() {
     setSavingCredit(true);
     const student = creditDialog.student;
     const newCredits = Math.max(0, (student.credits || 0) + creditValue);
-    // Usar função backend dedicada para evitar corrupção de data.data
-    await base44.functions.invoke("updateStudentCredits", {
-      userId: student.id,
-      credits: newCredits,
+    // Buscar usuário fresco do banco para ter o data atual correto
+    const [freshUser] = await base44.entities.User.filter({ email: student.email }, "-created_date", 1);
+    if (!freshUser) { toast.error("Usuário não encontrado"); setSavingCredit(false); return; }
+    // Pegar data limpo (sem data.data aninhado)
+    const cleanData = Object.fromEntries(
+      Object.entries(freshUser.data || {}).filter(([k]) => k !== 'data')
+    );
+    await base44.entities.User.update(freshUser.id, {
+      data: { ...cleanData, credits: newCredits }
     });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     queryClient.invalidateQueries({ queryKey: ["userCredits", student.email] });

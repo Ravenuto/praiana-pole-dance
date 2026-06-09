@@ -9,39 +9,48 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId, credits, plan, plan_start_date } = await req.json();
+    const body = await req.json();
+    const { userId, credits, plan, plan_start_date } = body;
 
     if (!userId) {
       return Response.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    // Buscar o usuário atual direto do banco
-    const allUsers = await base44.asServiceRole.entities.User.list();
-    const targetUser = allUsers.find(u => u.id === userId);
+    // Buscar o usuário por email via filter (mais confiável que list+find)
+    const { userEmail } = body;
+    let targetUser = null;
+
+    if (userEmail) {
+      const found = await base44.asServiceRole.entities.User.filter({ email: userEmail }, '-created_date', 1);
+      targetUser = found[0] || null;
+    }
+
+    if (!targetUser) {
+      // Fallback: listar todos e encontrar por id
+      const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 200);
+      targetUser = allUsers.find(u => u.id === userId) || null;
+    }
 
     if (!targetUser) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Pegar o data atual, mas remover qualquer 'data' aninhado dentro dele
+    // Pegar data atual e remover qualquer 'data' aninhado (corrige corrupção)
     const currentData = targetUser.data || {};
-    console.log(`currentData original: ${JSON.stringify(currentData)}`);
-    
-    // Destruturar removendo o campo 'data' aninhado (evita data.data)
     const cleanData = Object.fromEntries(
       Object.entries(currentData).filter(([k]) => k !== 'data')
     );
 
-    // Montar o novo objeto data limpo
+    // Montar novo objeto data limpo
     const newData = { ...cleanData };
     if (credits !== undefined) newData.credits = credits;
     if (plan !== undefined) newData.plan = plan;
     if (plan_start_date !== undefined) newData.plan_start_date = plan_start_date;
 
-    console.log(`newData a salvar: ${JSON.stringify(newData)}`);
-    await base44.asServiceRole.entities.User.update(userId, { data: newData });
+    // Usar base44 (user-scoped como admin) em vez de asServiceRole para update do User.data
+    await base44.entities.User.update(targetUser.id, { data: newData });
 
-    console.log(`Créditos atualizados para ${targetUser.email}: credits=${newData.credits}`);
+    console.log(`Atualizado ${targetUser.email}: credits=${newData.credits}, plan=${newData.plan}`);
 
     return Response.json({ success: true, credits: newData.credits, plan: newData.plan });
   } catch (error) {
