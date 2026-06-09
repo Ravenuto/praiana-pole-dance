@@ -66,9 +66,16 @@ export default function Schedule() {
     return true;
   };
 
-  // Sempre usar userData do banco (mais atualizado que user do AuthContext)
-  // Créditos podem estar em userData.data.credits (estrutura do Base44) ou userData.credits
-  const userCredits = userData?.data?.credits ?? userData?.credits ?? 0;
+  // Resolver créditos mesmo se data estiver corrompido com data.data aninhado
+  const getCredits = (u) => {
+    if (!u) return 0;
+    const fromData = u?.data?.credits;
+    const fromNested = u?.data?.data?.credits;
+    const fromRoot = u?.credits;
+    const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
+    return vals.length > 0 ? Math.max(...vals) : 0;
+  };
+  const userCredits = getCredits(userData);
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const { data: holidayData = [] } = useQuery({
@@ -160,7 +167,11 @@ export default function Schedule() {
     try {
       // Buscar créditos FRESCOS do banco antes de qualquer operação
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.data?.credits ?? latestUser?.credits ?? 0;
+      const fromData = latestUser?.data?.credits;
+      const fromNested = latestUser?.data?.data?.credits;
+      const fromRoot = latestUser?.credits;
+      const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
+      const currentCredits = vals.length > 0 ? Math.max(...vals) : 0;
 
       if (user?.role !== "admin") {
         if (currentCredits <= 0) {
@@ -185,9 +196,10 @@ export default function Schedule() {
         status: "confirmada"
       });
 
-      // Debitar crédito IMEDIATAMENTE após criar o booking
+      // Debitar crédito IMEDIATAMENTE após criar o booking (limpar data.data corrompido ao salvar)
       if (latestUser?.id && user?.role !== "admin") {
-        await base44.entities.User.update(latestUser.id, { data: { ...latestUser.data, credits: currentCredits - 1 } });
+        const cleanData = Object.fromEntries(Object.entries(latestUser.data || {}).filter(([k]) => k !== 'data'));
+        await base44.entities.User.update(latestUser.id, { data: { ...cleanData, credits: currentCredits - 1 } });
       }
 
       invalidate();
@@ -232,11 +244,16 @@ export default function Schedule() {
     try {
       // Buscar créditos frescos do banco
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.data?.credits ?? latestUser?.credits ?? 0;
+      const fromData2 = latestUser?.data?.credits;
+      const fromNested2 = latestUser?.data?.data?.credits;
+      const fromRoot2 = latestUser?.credits;
+      const vals2 = [fromData2, fromNested2, fromRoot2].filter(v => v !== undefined && v !== null);
+      const currentCredits = vals2.length > 0 ? Math.max(...vals2) : 0;
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
-      // Devolver crédito IMEDIATAMENTE após cancelar
+      // Devolver crédito IMEDIATAMENTE após cancelar (limpar data.data corrompido ao salvar)
       if (latestUser?.id && user?.role !== "admin") {
-        await base44.entities.User.update(latestUser.id, { data: { ...latestUser.data, credits: currentCredits + 1 } });
+        const cleanData = Object.fromEntries(Object.entries(latestUser.data || {}).filter(([k]) => k !== 'data'));
+        await base44.entities.User.update(latestUser.id, { data: { ...cleanData, credits: currentCredits + 1 } });
       }
       invalidate();
       toast.success("Reserva cancelada! Crédito devolvido.");

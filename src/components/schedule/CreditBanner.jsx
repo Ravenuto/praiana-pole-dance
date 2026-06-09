@@ -24,9 +24,12 @@ export default function CreditBanner() {
 
   if (!user || user.role === "admin") return null;
 
-  // Usar APENAS userData do banco, nunca user do AuthContext (que pode estar desatualizado)
-  // Créditos podem estar em userData.data.credits (estrutura do Base44) ou userData.credits
-  const credits = userData?.data?.credits ?? userData?.credits ?? 0;
+  // Resolver créditos mesmo se data estiver corrompido com data.data aninhado
+  const fromData = userData?.data?.credits;
+  const fromNested = userData?.data?.data?.credits;
+  const fromRoot = userData?.credits;
+  const vals = [fromData, fromNested, fromRoot].filter(v => v !== undefined && v !== null);
+  const credits = vals.length > 0 ? Math.max(...vals) : 0;
   const planLabel = userData?.data?.plan_label || userData?.data?.plan || userData?.plan_label || userData?.plan || "Plano de aulas";
   const noCredits = credits <= 0;
 
