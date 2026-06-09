@@ -73,7 +73,7 @@ export default function AdminDashboard() {
         {activeTab === "plans"       && <ManagePlansAdmin />}
         {activeTab === "students"    && <ManageStudents />}
         {activeTab === "attendance"  && <AttendanceBySchedule initialDate={presencasDate} />}
-        {activeTab === "requests"    && <StudentRequests />}
+        {activeTab === "requests"    && <StudentRequests onApproved={() => setActiveTab("students")} />}
       </div>
     </div>
   );

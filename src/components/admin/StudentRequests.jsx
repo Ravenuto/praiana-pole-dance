@@ -9,18 +9,20 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 
-export default function StudentRequests() {
+export default function StudentRequests({ onApproved }) {
   const queryClient = useQueryClient();
   const [loadingId, setLoadingId] = useState(null);
 
-  // Busca usuários registrados que ainda não foram ativados (is_active não true e sem créditos/plano)
+  // Busca usuários com email confirmado (full_name preenchido) que ainda não foram aprovados (is_active !== true)
+  // Exclui quem foi rejeitado (plan === "rejected")
   const { data: pendingUsers = [], isLoading } = useQuery({
     queryKey: ["pendingStudents"],
     queryFn: async () => {
       const all = await base44.entities.User.filter({ role: "user" }, "-created_date", 100);
-      // Considera pendente quem não tem is_active = true e não tem créditos/plano
-      return all.filter(u => !u.is_active && !u.credits && !u.plan);
+      // Pendente = confirmou email (tem full_name) + não foi aprovado ainda + não foi rejeitado
+      return all.filter(u => u.full_name && u.is_active !== true && u.plan !== "rejected");
     },
+    refetchInterval: 30000, // atualiza a cada 30s
   });
 
   const handleApprove = async (u) => {
@@ -38,7 +40,10 @@ export default function StudentRequests() {
         actor_name: "Praiana Pole Dance"
       });
       queryClient.invalidateQueries({ queryKey: ["pendingStudents"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       toast.success(`${u.full_name || u.email} aprovada!`);
+      // Navegar para aba Alunas para o admin já poder editar o plano
+      if (onApproved) onApproved();
     } catch {
       toast.error("Erro ao aprovar");
     }

@@ -35,11 +35,12 @@ export default function Schedule() {
   const selectedDay = useMemo(() => getDayKey(new Date(selectedDate + "T12:00:00")), [selectedDate]);
 
   // Lógica de datas permitidas para a aluna (dentro do período do plano)
+  // Mesma query key que CreditBanner para sincronizar créditos em tempo real
   const { data: userData } = useQuery({
-    queryKey: ["scheduleUserData", user?.email],
+    queryKey: ["userCredits", user?.email],
     queryFn: async () => {
-      const me = await base44.auth.me();
-      return me || null;
+      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      return u || null;
     },
     enabled: !!user?.email,
     staleTime: 0,
@@ -148,9 +149,8 @@ export default function Schedule() {
     queryClient.invalidateQueries({ queryKey: ["myBookings"] });
     queryClient.invalidateQueries({ queryKey: ["myWaitlist"] });
     queryClient.invalidateQueries({ queryKey: ["allWaitlist"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits"] }); // sincroniza CreditBanner e Profile
     queryClient.invalidateQueries({ queryKey: ["myProfile"] });
-    queryClient.invalidateQueries({ queryKey: ["creditBanner"] });
-    queryClient.invalidateQueries({ queryKey: ["allUsers"] });
   };
 
   const handleBook = async (session) => {

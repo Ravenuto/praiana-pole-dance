@@ -28,20 +28,22 @@ export default function Profile() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [form, setForm] = useState(null);
 
+  // Busca dados completos do User entity (inclui créditos atualizados pelo admin)
+  const { data: userEntity, isLoading: loadingEntity } = useQuery({
+    queryKey: ["userCredits", user?.email],
+    queryFn: async () => {
+      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
+      return u || null;
+    },
+    enabled: !!user?.email,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
   const { data: userData, isLoading } = useQuery({
     queryKey: ["myProfile"],
     queryFn: () => base44.auth.me(),
     enabled: !!user,
-    onSuccess: (data) => {
-      if (data && !form) {
-        setForm({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          birth_date: data.birth_date || "",
-          profile_image_url: data.profile_image_url || "",
-        });
-      }
-    },
   });
 
   const today = new Date();
@@ -60,7 +62,8 @@ export default function Profile() {
 
   const planMaxCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
 
-  const currentUser = userData || user;
+  // userEntity tem os créditos mais atualizados (admin pode ter editado)
+  const currentUser = userEntity || userData || user;
   const plan = currentUser?.plan || "4_aulas";
   const planData = planInfo[plan] || planInfo["4_aulas"];
   const credits = currentUser?.credits ?? 0;
@@ -68,15 +71,16 @@ export default function Profile() {
   const usedThisMonth = monthBookings.length;
 
   React.useEffect(() => {
-    if (userData && !form) {
+    const source = userEntity || userData;
+    if (source && !form) {
       setForm({
-        full_name: userData.full_name || user?.full_name || "",
-        phone: userData.phone || "",
-        birth_date: userData.birth_date || "",
-        profile_image_url: userData.profile_image_url || "",
+        full_name: source.full_name || user?.full_name || "",
+        phone: source.phone || "",
+        birth_date: source.birth_date || "",
+        profile_image_url: source.profile_image_url || "",
       });
     }
-  }, [userData]);
+  }, [userEntity, userData]);
 
   const handlePhoto = async (e) => {
     const file = e.target.files[0];
@@ -110,7 +114,7 @@ export default function Profile() {
     setSaving(false);
   };
 
-  if (isLoading || !form) {
+  if ((isLoading || loadingEntity) || !form) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
         <Skeleton className="h-10 w-48" />

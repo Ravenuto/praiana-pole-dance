@@ -9,13 +9,16 @@ export default function CreditBanner() {
   const { user } = useAuth();
 
   // Busca o registro do usuário para pegar créditos atualizados
+  // Usa a mesma query key que Schedule e Profile para compartilhar o cache
   const { data: userData } = useQuery({
-    queryKey: ["myProfile", user?.email],
+    queryKey: ["userCredits", user?.email],
     queryFn: async () => {
       const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
       return u || null;
     },
     enabled: !!user?.email,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   if (!user || user.role === "admin") return null;
