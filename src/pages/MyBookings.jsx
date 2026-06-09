@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import CreditBanner from "@/components/schedule/CreditBanner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -83,8 +82,6 @@ export default function MyBookings() {
         <h1 className="font-heading text-3xl font-bold">Minhas Reservas</h1>
         <p className="mt-1 text-muted-foreground text-sm">Acompanhe suas aulas agendadas</p>
       </div>
-
-      <CreditBanner />
 
       {/* Filtros de status */}
       <div className="flex flex-wrap gap-2 mb-5">

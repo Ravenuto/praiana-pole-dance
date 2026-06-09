@@ -26,14 +26,14 @@ export default function CreditBanner() {
   const noCredits = credits <= 0;
 
   return (
-    <div className={`rounded-2xl border-2 p-4 mb-6 ${noCredits ? "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" : "bg-primary/5 border-primary/20"}`}>
+    <div className="rounded-2xl border-2 p-4 mb-6 bg-primary/5 border-primary/20">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Zap className={`h-4 w-4 ${noCredits ? "text-red-500" : "text-primary"}`} />
+          <Zap className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold">{planLabel}</span>
         </div>
         <div className="text-right">
-          <p className={`text-2xl font-bold font-heading leading-none ${noCredits ? "text-red-500" : "text-primary"}`}>
+          <p className="text-2xl font-bold font-heading leading-none text-primary">
             {credits}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -41,11 +41,6 @@ export default function CreditBanner() {
           </p>
         </div>
       </div>
-      {noCredits && (
-        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-          Você não tem créditos disponíveis. Entre em contato para renovar seu plano.
-        </p>
-      )}
     </div>
   );
 }

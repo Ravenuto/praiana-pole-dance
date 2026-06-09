@@ -115,11 +115,6 @@ export default function SessionCard({
                   {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Fila de espera"}
                 </Button>
               )
-            ) : !hasCredits ? (
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs text-destructive font-semibold bg-destructive/10 px-3 py-1 rounded-full">Sem créditos 😢</span>
-                <a href="/planos" className="text-xs text-primary underline underline-offset-2">Ver planos</a>
-              </div>
             ) : (
               <Button
                 size="sm"

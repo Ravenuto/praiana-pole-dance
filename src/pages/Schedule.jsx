@@ -162,7 +162,7 @@ export default function Schedule() {
 
       if (user?.role !== "admin") {
         if (currentCredits <= 0) {
-          toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu pacote!", { duration: 5000 });
+          toast.error("Você não tem créditos disponíveis. Entre em contato para renovar seu plano.", { duration: 5000 });
           setLoadingSession(null);
           return;
         }

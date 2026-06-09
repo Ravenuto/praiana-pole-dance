@@ -119,6 +119,15 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
         studentName = student.full_name || student.email;
         studentEmail = student.email;
 
+        // Verificar se a aluna já está nesta aula
+        const existingBookings = bookingsBySession[addStudentDialog.session.id] || [];
+        const alreadyBooked = existingBookings.some(b => b.student_email === studentEmail && b.status !== "cancelada");
+        if (alreadyBooked) {
+          toast.error("Esta aluna já está reservada nesta aula.");
+          setAddingStudent(false);
+          return;
+        }
+
         // Debitar crédito da aluna
         const currentCredits = student.credits ?? 0;
         if (currentCredits > 0) {

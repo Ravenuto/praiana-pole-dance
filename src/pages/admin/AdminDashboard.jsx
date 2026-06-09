@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
-import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck } from "lucide-react";
+import { BookOpen, Calendar, Users, CreditCard, UserPlus, ClipboardCheck, Bell } from "lucide-react";
 import ManageClassTypes from "@/components/admin/ManageClassTypes";
 import ManageSessions from "@/components/admin/ManageSessions";
 import ManageBookings from "@/components/admin/ManageBookingsMobile";
 import ManagePlansAdmin from "@/components/admin/ManagePlansAdmin";
 import ManageStudents from "@/components/admin/ManageStudents";
 import AttendanceBySchedule from "@/components/admin/AttendanceBySchedule";
+import StudentRequests from "@/components/admin/StudentRequests";
 
 const TABS = [
   { key: "sessions",    label: "Horários",    icon: Calendar },
@@ -16,6 +17,7 @@ const TABS = [
   { key: "plans",       label: "Planos",      icon: CreditCard },
   { key: "students",    label: "Alunas",      icon: UserPlus },
   { key: "attendance",  label: "Presenças",   icon: ClipboardCheck },
+  { key: "requests",    label: "Solicitações", icon: Bell },
 ];
 
 export default function AdminDashboard() {
@@ -46,7 +48,7 @@ export default function AdminDashboard() {
        </div>
 
       {/* Tab nav — grid para caber na tela em mobile */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mb-6">
+      <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 mb-6">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -71,6 +73,7 @@ export default function AdminDashboard() {
         {activeTab === "plans"       && <ManagePlansAdmin />}
         {activeTab === "students"    && <ManageStudents />}
         {activeTab === "attendance"  && <AttendanceBySchedule initialDate={presencasDate} />}
+        {activeTab === "requests"    && <StudentRequests />}
       </div>
     </div>
   );
