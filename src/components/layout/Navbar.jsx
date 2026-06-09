@@ -129,10 +129,9 @@ export default function Navbar() {
 
         {/* Mobile Sidebar */}
         {sidebarOpen && (
-          <div className="md:hidden fixed inset-0 top-14 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
-        )}
-        {sidebarOpen && (
-          <div className="md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-50">
+          <>
+            <div className="md:hidden fixed inset-0 top-14 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
+            <div className="md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-50">
             <div className="p-4 space-y-1">
               {/* Primary link */}
               <Link
@@ -255,6 +254,7 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
     </nav>);
