@@ -139,7 +139,7 @@ export default function Register() {
             <Heart className="w-8 h-8 text-primary" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Praiana Pole Dance</h1>
-          <p className="text-muted-foreground mt-1">Crie sua conta e faça parte da família 💙</p>
+          <p className="text-muted-foreground mt-1">Crie sua conta e faça parte da nossa família 💙</p>
         </div>
 
         <div className="bg-card rounded-2xl shadow-sm border border-border p-8">

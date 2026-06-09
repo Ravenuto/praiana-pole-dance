@@ -51,7 +51,7 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
    });
    const [selectedDate, setSelectedDate] = useState(initialDate || format(new Date(), "yyyy-MM-dd"));
    const [addStudentDialog, setAddStudentDialog] = useState(null);
-   const [addStudentForm, setAddStudentForm] = useState({ name: "", isAvulsa: false });
+   const [addStudentForm, setAddStudentForm] = useState({ selectedUserId: "", isAvulsa: false });
    const [addingStudent, setAddingStudent] = useState(false);
 
    const selectedDayKey = useMemo(() => {
@@ -74,6 +74,11 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
     queryKey: ["adminBookingsAtt", selectedDate],
     queryFn: () => base44.entities.Booking.filter({ session_date: selectedDate }, "-created_date", 200),
     enabled: !!selectedDate,
+  });
+
+  const { data: activeStudents = [] } = useQuery({
+    queryKey: ["activeStudentsForAttendance"],
+    queryFn: () => base44.entities.User.filter({ is_active: true }, "full_name", 200),
   });
 
   const sortedSessions = useMemo(() => [...sessions].sort((a, b) => (a.time || "").localeCompare(b.time || "")), [sessions]);
@@ -101,12 +106,26 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
   };
 
   const handleAddStudent = async () => {
-    if (!addStudentForm.name && !addStudentForm.isAvulsa) return toast.error("Nome obrigatório");
+    if (!addStudentForm.selectedUserId && !addStudentForm.isAvulsa) return toast.error("Selecione uma aluna");
     setAddingStudent(true);
     try {
       const session = addStudentDialog.session;
-      const studentName = addStudentForm.isAvulsa ? "Avulsa" : addStudentForm.name;
-      const studentEmail = addStudentForm.isAvulsa ? `avulsa-${Date.now()}@praiana.app` : `manual-${addStudentForm.name.replace(/\s+/g, "").toLowerCase()}@praiana.app`;
+      let studentName = "Avulsa";
+      let studentEmail = `avulsa-${Date.now()}@praiana.app`;
+
+      if (!addStudentForm.isAvulsa) {
+        const student = activeStudents.find(s => s.id === addStudentForm.selectedUserId);
+        if (!student) return toast.error("Aluna não encontrada");
+        studentName = student.full_name || student.email;
+        studentEmail = student.email;
+
+        // Debitar crédito da aluna
+        const currentCredits = student.credits ?? 0;
+        if (currentCredits > 0) {
+          await base44.entities.User.update(student.id, { credits: currentCredits - 1 });
+        }
+      }
+
       await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
@@ -117,9 +136,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
         status: "confirmada",
       });
       queryClient.invalidateQueries({ queryKey: ["adminBookingsAtt"] });
-      toast.success(addStudentForm.isAvulsa ? "Vaga avulsa adicionada!" : "Aluna adicionada à aula!");
+      queryClient.invalidateQueries({ queryKey: ["activeStudentsForAttendance"] });
+      toast.success(addStudentForm.isAvulsa ? "Vaga avulsa adicionada!" : "Aluna adicionada e crédito debitado!");
       setAddStudentDialog(null);
-      setAddStudentForm({ name: "", isAvulsa: false });
+      setAddStudentForm({ selectedUserId: "", isAvulsa: false });
     } catch {
       toast.error("Erro ao adicionar");
     }
@@ -242,10 +262,9 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                             const statusOpt = statusOptions.find((s) => s.value === booking.status) || statusOptions[0];
                             return (
                               <div key={booking.id} className="flex items-center justify-between gap-1 px-2 py-1.5">
-                                <div className="min-w-0">
-                                   <p className="font-medium text-[10px] truncate">{booking.student_name || "—"}</p>
-                                   <p className="text-[8px] text-muted-foreground truncate">{booking.student_email}</p>
-                                 </div>
+                               <div className="min-w-0">
+                                  <p className="font-medium text-[10px] truncate">{booking.student_name || "—"}</p>
+                                </div>
                                  <Select value={booking.status} onValueChange={(v) => handleStatus(booking.id, v)}>
                                    <SelectTrigger className="w-24 h-6 text-[9px]">
                                     <Badge className={`${statusOpt.cls} border-0 text-[8px]`}>{statusOpt.label}</Badge>
@@ -285,10 +304,10 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
                   onClick={() => setAddStudentForm(f => ({ ...f, isAvulsa: false }))}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${!addStudentForm.isAvulsa ? "bg-primary text-white border-primary" : "bg-muted text-muted-foreground border-border"}`}
                 >
-                  Nome da aluna
+                  Aluna ativa
                 </button>
                 <button
-                  onClick={() => setAddStudentForm(f => ({ ...f, isAvulsa: true, name: "" }))}
+                  onClick={() => setAddStudentForm(f => ({ ...f, isAvulsa: true, selectedUserId: "" }))}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${addStudentForm.isAvulsa ? "bg-primary text-white border-primary" : "bg-muted text-muted-foreground border-border"}`}
                 >
                   Avulsa
@@ -296,8 +315,31 @@ export default function AttendanceBySchedule({ initialDate = "" }) {
               </div>
               {!addStudentForm.isAvulsa && (
                 <div>
-                  <Label className="text-xs mb-1 block">Nome</Label>
-                  <Input value={addStudentForm.name} onChange={(e) => setAddStudentForm((f) => ({ ...f, name: e.target.value }))} className="h-8 text-sm" placeholder="Nome da aluna" />
+                  <Label className="text-xs mb-1 block">Selecione a aluna</Label>
+                  <Select
+                    value={addStudentForm.selectedUserId}
+                    onValueChange={(v) => setAddStudentForm(f => ({ ...f, selectedUserId: v }))}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Escolha uma aluna..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeStudents.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.full_name || s.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {addStudentForm.selectedUserId && (() => {
+                    const st = activeStudents.find(s => s.id === addStudentForm.selectedUserId);
+                    return st ? (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Créditos atuais: <strong>{st.credits ?? 0}</strong>
+                        {(st.credits ?? 0) === 0 && <span className="text-destructive ml-1">(sem créditos)</span>}
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               )}
               {addStudentForm.isAvulsa && (

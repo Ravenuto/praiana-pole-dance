@@ -36,13 +36,14 @@ export default function Schedule() {
 
   // Lógica de datas permitidas para a aluna (dentro do período do plano)
   const { data: userData } = useQuery({
-    queryKey: ["myProfile", user?.email],
+    queryKey: ["scheduleUserData", user?.email],
     queryFn: async () => {
-      const [u] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      return u || null;
+      const me = await base44.auth.me();
+      return me || null;
     },
     enabled: !!user?.email,
-    staleTime: 0 // Sempre buscar dados frescos do banco
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Data mínima e máxima baseadas no plano

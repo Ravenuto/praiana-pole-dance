@@ -89,41 +89,38 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.1 }}>
             
-                <Link
-              to="/aulas"
-              className="group block rounded-2xl overflow-hidden border border-border bg-card hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
-              
-                  {ct.image_url ?
-              <div className="aspect-[4/3] overflow-hidden">
-                      <img
-                  src={ct.image_url}
-                  alt={ct.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                
-                    </div> :
+                <div className="block rounded-2xl overflow-hidden border border-border bg-card">
+                      {ct.image_url ?
+                  <div className="aspect-[4/3] overflow-hidden">
+                          <img
+                      src={ct.image_url}
+                      alt={ct.name}
+                      className="w-full h-full object-cover" />
 
-              <div
-                className="aspect-[4/3] flex items-center justify-center"
-                style={{ backgroundColor: ct.color || "hsl(320, 45%, 45%)", opacity: 0.15 }}>
-                
-                      <Sparkles className="h-12 w-12 text-primary" />
+                        </div> :
+
+                  <div
+                    className="aspect-[4/3] flex items-center justify-center"
+                    style={{ backgroundColor: ct.color || "hsl(320, 45%, 45%)", opacity: 0.15 }}>
+
+                          <Sparkles className="h-12 w-12 text-primary" />
+                        </div>
+                  }
+                      <div className="p-5">
+                        <h3 className="font-heading text-xl font-semibold">{ct.name}</h3>
+                        {ct.description &&
+                    <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{ct.description}</p>
+                    }
+                        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" /> {ct.duration_minutes || 60}min
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3.5 w-3.5" /> Até {ct.max_students || 8} alunas
+                          </span>
+                        </div>
+                      </div>
                     </div>
-              }
-                  <div className="p-5">
-                    <h3 className="font-heading text-xl font-semibold">{ct.name}</h3>
-                    {ct.description &&
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{ct.description}</p>
-                }
-                    <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" /> {ct.duration_minutes || 60}min
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3.5 w-3.5" /> Até {ct.max_students || 8} alunas
-                      </span>
-                    </div>
-                  </div>
-                </Link>
               </motion.div>
           )}
           </div>
