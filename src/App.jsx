@@ -50,28 +50,30 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/aulas" element={<Schedule />} />
-          <Route path="/minhas-reservas" element={<MyBookings />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/recados" element={<Notices />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/planos" element={<Plans />} />
-          <Route path="/notificacoes" element={<Notifications />} />
-          <Route path="/configuracoes" element={<Settings />} />
-          <Route path="/sobre" element={<About />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/aulas" element={<Schedule />} />
+            <Route path="/minhas-reservas" element={<MyBookings />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/recados" element={<Notices />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/planos" element={<Plans />} />
+            <Route path="/notificacoes" element={<Notifications />} />
+            <Route path="/configuracoes" element={<Settings />} />
+            <Route path="/sobre" element={<About />} />
+          </Route>
         </Route>
-        <BottomTabs />
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+      <BottomTabs />
+    </>
   );
 };
 
