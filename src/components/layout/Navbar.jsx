@@ -127,135 +127,142 @@ export default function Navbar() {
           </div>
         </div>
 
+        {/* Mobile Sidebar Overlay */}
+        <div 
+          className={`md:hidden fixed inset-0 top-14 z-30 bg-black/50 transition-opacity ${
+            sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        />
+
         {/* Mobile Sidebar */}
-        {sidebarOpen && (
-          <>
-            <div className="md:hidden fixed inset-0 top-14 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
-            <div className="md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-50">
-            <div className="p-4 space-y-1">
-              {/* Primary link */}
-              <Link
-                to="/"
-                onClick={handleNavClick}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                }`}
-              >
-                <Home className="h-6 w-6" />
-                <span className="font-medium">Início</span>
-              </Link>
+        <div 
+          className={`md:hidden fixed left-0 top-14 bottom-0 w-64 bg-card border-r border-border overflow-y-auto z-40 transition-transform ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="p-4 space-y-1">
+            {/* Primary link */}
+            <Link
+              to="/"
+              onClick={handleNavClick}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+              }`}
+            >
+              <Home className="h-6 w-6" />
+              <span className="font-medium">Início</span>
+            </Link>
 
-              {/* Sidebar Groups */}
-              {SIDEBAR_GROUPS.map((group) => {
-                const Icon = group.icon;
-                const isExpanded = expandedGroups[group.key];
-                const isGroupActive = group.links.some(l => isActive(l.to));
-                
-                return (
-                  <div key={group.key}>
-                    <button
-                      onClick={() => group.expandable && toggleGroup(group.key)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                        isGroupActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <Icon className="h-6 w-6 flex-shrink-0" />
-                      <span className="font-medium flex-1 text-left">{group.label}</span>
-                      {group.expandable && (
-                        <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                      )}
-                    </button>
-
-                    {/* Expanded submenu */}
-                    {group.expandable && isExpanded && (
-                      <div className="pl-8 py-1 space-y-1">
-                        {group.links.map((link) => {
-                          const LinkIcon = link.icon;
-                          return (
-                            <Link
-                              key={link.to}
-                              to={link.to}
-                              onClick={handleNavClick}
-                              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                                isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                              }`}
-                            >
-                              <LinkIcon className="h-4 w-4" />
-                              {link.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {!group.expandable && (
-                      <div className="pl-8 py-1 space-y-1">
-                        {group.links.map((link) => {
-                          const LinkIcon = link.icon;
-                          return (
-                            <Link
-                              key={link.to}
-                              to={link.to}
-                              onClick={handleNavClick}
-                              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                                isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                              }`}
-                            >
-                              <LinkIcon className="h-4 w-4" />
-                              {link.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <div className="my-2 border-b border-border/50" />
-                  </div>
-                );
-              })}
-
-              {/* Admin group */}
-              {isAdmin && (
-                <>
+            {/* Sidebar Groups */}
+            {SIDEBAR_GROUPS.map((group) => {
+              const Icon = group.icon;
+              const isExpanded = expandedGroups[group.key];
+              const isGroupActive = group.links.some(l => isActive(l.to));
+              
+              return (
+                <div key={group.key}>
                   <button
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
+                    onClick={() => group.expandable && toggleGroup(group.key)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isGroupActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                    }`}
                   >
-                    <ShieldCheck className="h-6 w-6 flex-shrink-0" />
-                    <span className="font-medium flex-1 text-left">Admin</span>
+                    <Icon className="h-6 w-6 flex-shrink-0" />
+                    <span className="font-medium flex-1 text-left">{group.label}</span>
+                    {group.expandable && (
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                    )}
                   </button>
-                  <div className="pl-8 py-1 space-y-1">
-                    <Link
-                      to="/admin"
-                      onClick={handleNavClick}
-                      className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                        isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <ShieldCheck className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </div>
-                  <div className="my-2 border-b border-border/50" />
-                </>
-              )}
 
-              {/* Footer */}
-              <div className="mt-auto pt-4 border-t border-border">
-                <div className="px-4 py-3 text-xs text-muted-foreground">
-                  {user?.full_name || user?.email}
+                  {/* Expanded submenu */}
+                  {group.expandable && isExpanded && (
+                    <div className="pl-8 py-1 space-y-1">
+                      {group.links.map((link) => {
+                        const LinkIcon = link.icon;
+                        return (
+                          <Link
+                            key={link.to}
+                            to={link.to}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                              isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            {link.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!group.expandable && (
+                    <div className="pl-8 py-1 space-y-1">
+                      {group.links.map((link) => {
+                        const LinkIcon = link.icon;
+                        return (
+                          <Link
+                            key={link.to}
+                            to={link.to}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                              isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            {link.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="my-2 border-b border-border/50" />
                 </div>
+              );
+            })}
+
+            {/* Admin group */}
+            {isAdmin && (
+              <>
                 <button
-                  onClick={() => base44.auth.logout()}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
                 >
-                  <LogOut className="h-5 w-5" />
-                  Sair
+                  <ShieldCheck className="h-6 w-6 flex-shrink-0" />
+                  <span className="font-medium flex-1 text-left">Admin</span>
                 </button>
+                <div className="pl-8 py-1 space-y-1">
+                  <Link
+                    to="/admin"
+                    onClick={handleNavClick}
+                    className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                      isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </div>
+                <div className="my-2 border-b border-border/50" />
+              </>
+            )}
+
+            {/* Footer */}
+            <div className="mt-auto pt-4 border-t border-border">
+              <div className="px-4 py-3 text-xs text-muted-foreground">
+                {user?.full_name || user?.email}
               </div>
+              <button
+                onClick={() => base44.auth.logout()}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                Sair
+              </button>
             </div>
           </div>
-          </>
-        )}
+        </div>
       </div>
     </nav>);
 
