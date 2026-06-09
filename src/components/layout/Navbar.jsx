@@ -7,12 +7,8 @@ import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
   Menu, X, LogOut, ChevronDown,
-  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users } from
+  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users, Info } from
 "lucide-react";
-
-const RECADOS_LINKS = [
-  { to: "/recados", label: "Recados", icon: Megaphone },
-];
 
 const MINHA_CONTA_LINKS = [
   { to: "/perfil", label: "Perfil", icon: User },
@@ -28,16 +24,18 @@ const COMUNIDADE_LINKS = [
   { to: "/feed", label: "Feed", icon: ImageIcon },
 ];
 
-const STUDIO_INFO_LINKS = [
-  { to: "/studio", label: "Informações do Estúdio", icon: Megaphone },
-];
-
 const SIDEBAR_GROUPS = [
-  { key: "recados", label: "Recados", icon: Megaphone, links: RECADOS_LINKS, expandable: false },
   { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: true },
   { key: "comunidade", label: "Comunidade", icon: Users, links: COMUNIDADE_LINKS, expandable: true },
-  { key: "studio_info", label: "Informações", icon: Megaphone, links: STUDIO_INFO_LINKS, expandable: false },
   { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: true },
+];
+
+const DIRECT_LINKS = [
+  { to: "/recados", label: "Recados", icon: Megaphone },
+];
+
+const FOOTER_LINKS = [
+  { to: "/sobre", label: "Sobre", icon: Users },
 ];
 
 export default function Navbar() {
@@ -86,6 +84,17 @@ export default function Navbar() {
             >
               Início
             </Link>
+            {DIRECT_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
+                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
             {SIDEBAR_GROUPS.map((group) => (
               <Link
                 key={group.key}
@@ -95,6 +104,17 @@ export default function Navbar() {
                 }`}
               >
                 {group.label}
+              </Link>
+            ))}
+            {FOOTER_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
+                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {link.label}
               </Link>
             ))}
             {isAdmin && (
@@ -161,6 +181,26 @@ export default function Navbar() {
               <span className="font-medium">Início</span>
             </Link>
 
+            {/* Direct links */}
+            {DIRECT_LINKS.map((link) => {
+              const LinkIcon = link.icon;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={handleNavClick}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <LinkIcon className="h-5 w-5" />
+                  <span className="font-semibold">{link.label}</span>
+                </Link>
+              );
+            })}
+
+            <div className="my-1 border-b border-border/30" />
+
             {/* Sidebar Groups */}
             {SIDEBAR_GROUPS.map((group) => {
               const Icon = group.icon;
@@ -209,9 +249,30 @@ export default function Navbar() {
               );
             })}
 
+            <div className="my-1 border-b border-border/30" />
+
+            {/* Footer Links */}
+            {FOOTER_LINKS.map((link) => {
+              const LinkIcon = link.icon;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={handleNavClick}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <LinkIcon className="h-5 w-5" />
+                  <span className="font-semibold">{link.label}</span>
+                </Link>
+              );
+            })}
+
             {/* Admin group */}
             {isAdmin && (
               <>
+                <div className="my-1 border-b border-border/30" />
                 <button
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted"
                 >

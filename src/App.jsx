@@ -22,7 +22,7 @@ import Profile from '@/pages/Profile';
 import Plans from '@/pages/Plans';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
-import StudioInfo from '@/pages/StudioInfo';
+import About from '@/pages/About';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -65,7 +65,7 @@ const AuthenticatedApp = () => {
           <Route path="/planos" element={<Plans />} />
           <Route path="/notificacoes" element={<Notifications />} />
           <Route path="/configuracoes" element={<Settings />} />
-          <Route path="/studio" element={<StudioInfo />} />
+          <Route path="/sobre" element={<About />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
