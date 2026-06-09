@@ -10,6 +10,10 @@ import {
   Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users } from
 "lucide-react";
 
+const RECADOS_LINKS = [
+  { to: "/recados", label: "Recados", icon: Megaphone },
+];
+
 const MINHA_CONTA_LINKS = [
   { to: "/perfil", label: "Perfil", icon: User },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
@@ -24,9 +28,15 @@ const COMUNIDADE_LINKS = [
   { to: "/feed", label: "Feed", icon: ImageIcon },
 ];
 
+const STUDIO_INFO_LINKS = [
+  { to: "/studio", label: "Informações do Estúdio", icon: Megaphone },
+];
+
 const SIDEBAR_GROUPS = [
+  { key: "recados", label: "Recados", icon: Megaphone, links: RECADOS_LINKS, expandable: false },
   { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: true },
   { key: "comunidade", label: "Comunidade", icon: Users, links: COMUNIDADE_LINKS, expandable: true },
+  { key: "studio_info", label: "Informações", icon: Megaphone, links: STUDIO_INFO_LINKS, expandable: false },
   { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: true },
 ];
 

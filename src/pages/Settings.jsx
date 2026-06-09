@@ -3,10 +3,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, BellOff, Loader2, Check } from "lucide-react";
+import { Bell, BellOff, Loader2, Check, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import ChangePassword from "@/components/settings/ChangePassword";
 
 const NOTIFICATION_OPTIONS = [
   { key: "booking_made", label: "Reserva confirmada", description: "Quando você faz uma reserva de aula" },
@@ -23,6 +24,7 @@ export default function Settings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("notifications");
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["myProfile", user?.email],
@@ -33,10 +35,8 @@ export default function Settings() {
     enabled: !!user?.email,
   });
 
-  // notification_prefs é um objeto: { booking_made: true, new_notice: false, ... }
-  // Se não existir, todas ativas por padrão
   const notifPrefs = userData?.data?.notification_prefs || {};
-  const isEnabled = (key) => notifPrefs[key] !== false; // default: true
+  const isEnabled = (key) => notifPrefs[key] !== false;
 
   const handleToggle = async (key) => {
     if (!userData) return;
@@ -90,48 +90,81 @@ export default function Settings() {
         <p className="mt-1 text-muted-foreground text-sm">Personalize sua experiência no app</p>
       </div>
 
-      {/* Notificações */}
-      <div className="bg-card rounded-2xl border border-border p-5">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            <h2 className="font-heading font-semibold text-base">Notificações</h2>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={handleDisableAll} disabled={saving} className="text-xs gap-1 text-muted-foreground">
-              <BellOff className="h-3.5 w-3.5" /> Desativar todas
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleEnableAll} disabled={saving} className="text-xs gap-1">
-              <Check className="h-3.5 w-3.5" /> Ativar todas
-            </Button>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {NOTIFICATION_OPTIONS.map((opt) => (
-              <div key={opt.key} className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <Label className="text-sm font-medium cursor-pointer" htmlFor={opt.key}>
-                    {opt.label}
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
-                </div>
-                <Switch
-                  id={opt.key}
-                  checked={isEnabled(opt.key)}
-                  onCheckedChange={() => handleToggle(opt.key)}
-                  disabled={saving}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-border overflow-x-auto">
+        <button
+          onClick={() => setActiveTab("notifications")}
+          className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "notifications"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Bell className="h-4 w-4" />
+          Notificações
+        </button>
+        <button
+          onClick={() => setActiveTab("password")}
+          className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "password"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Lock className="h-4 w-4" />
+          Alterar Senha
+        </button>
       </div>
+
+      {/* Notificações Tab */}
+      {activeTab === "notifications" && (
+        <div className="bg-card rounded-2xl border border-border p-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <h2 className="font-heading font-semibold text-base">Notificações</h2>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+              <Button variant="outline" size="sm" onClick={handleDisableAll} disabled={saving} className="text-xs gap-1 w-full sm:w-auto">
+                <BellOff className="h-3.5 w-3.5" /> Desativar todas
+              </Button>
+              <Button variant="default" size="sm" onClick={handleEnableAll} disabled={saving} className="text-xs gap-1 w-full sm:w-auto">
+                <Check className="h-3.5 w-3.5" /> Ativar todas
+              </Button>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {NOTIFICATION_OPTIONS.map((opt) => (
+                <div key={opt.key} className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm font-medium cursor-pointer" htmlFor={opt.key}>
+                      {opt.label}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
+                  </div>
+                  <Switch
+                    id={opt.key}
+                    checked={isEnabled(opt.key)}
+                    onCheckedChange={() => handleToggle(opt.key)}
+                    disabled={saving}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Alterar Senha Tab */}
+      {activeTab === "password" && (
+        <ChangePassword />
+      )}
     </div>
   );
 }
