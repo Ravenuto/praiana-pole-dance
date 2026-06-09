@@ -54,21 +54,21 @@ export default function Register() {
       await base44.auth.updateMe({
         full_name: fullName,
         phone: phone,
-        birth_date: birthDate,
+        birth_date: birthDate
       });
       // Notifica admins sobre novo cadastro
       const admins = await base44.entities.User.filter({ role: "admin" });
       await Promise.all(
         admins.map((admin) =>
-          base44.entities.Notification.create({
-            user_email: admin.email,
-            type: "new_post",
-            title: "Nova aluna cadastrada! 🎉",
-            message: `${fullName || email} acabou de se cadastrar no app. Não esqueça de ativar o plano dela!`,
-            link: "/admin",
-            read: false,
-            actor_name: fullName || email,
-          })
+        base44.entities.Notification.create({
+          user_email: admin.email,
+          type: "new_post",
+          title: "Nova aluna cadastrada! 🎉",
+          message: `${fullName || email} acabou de se cadastrar no app. Não esqueça de ativar o plano dela!`,
+          link: "/admin",
+          read: false,
+          actor_name: fullName || email
+        })
         )
       );
       window.location.href = "/";
@@ -102,9 +102,9 @@ export default function Register() {
           </div>
 
           <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-            )}
+            {error &&
+            <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+            }
             <div className="flex justify-center mb-6">
               <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
                 <InputOTPGroup>
@@ -126,8 +126,8 @@ export default function Register() {
             </p>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -139,13 +139,13 @@ export default function Register() {
             <Heart className="w-8 h-8 text-primary" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-foreground">Praiana Pole Dance</h1>
-          <p className="text-muted-foreground mt-1">Crie sua conta e faça parte da nossa família 💙</p>
+          <p className="text-muted-foreground mt-1 text-sm">Crie sua conta e faça parte da nossa família 💙</p>
         </div>
 
         <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-          )}
+          {error &&
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+          }
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -158,8 +158,8 @@ export default function Register() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
@@ -171,8 +171,8 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone / WhatsApp *</Label>
@@ -183,8 +183,8 @@ export default function Register() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">Data de nascimento *</Label>
@@ -194,8 +194,8 @@ export default function Register() {
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha *</Label>
@@ -207,8 +207,8 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar senha *</Label>
@@ -220,8 +220,8 @@ export default function Register() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-12"
-                required
-              />
+                required />
+              
             </div>
             <Button type="submit" className="w-full h-12 font-medium rounded-full" disabled={loading}>
               {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando conta...</> : "Criar conta"}
@@ -234,6 +234,6 @@ export default function Register() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
