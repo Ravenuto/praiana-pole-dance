@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Clock, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import NoticesHome from "@/components/notices/NoticesHome";
 
 export default function Home() {
   const { data: classTypes = [] } = useQuery({
@@ -73,6 +74,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Recados */}
+      <NoticesHome />
 
       {/* Modalidades */}
       {classTypes.length > 0 &&

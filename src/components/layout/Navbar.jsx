@@ -22,14 +22,12 @@ const MINHAS_AULAS_LINKS = [
 
 const COMUNIDADE_LINKS = [
   { to: "/feed", label: "Feed", icon: ImageIcon },
-  { to: "/recados", label: "Recados", icon: Megaphone },
-  { to: "/planos", label: "Planos", icon: CreditCard },
 ];
 
 const SIDEBAR_GROUPS = [
-  { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: false },
+  { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: true },
   { key: "comunidade", label: "Comunidade", icon: Users, links: COMUNIDADE_LINKS, expandable: true },
-  { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: false },
+  { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: true },
 ];
 
 export default function Navbar() {
