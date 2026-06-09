@@ -67,7 +67,8 @@ export default function Schedule() {
   };
 
   // Sempre usar userData do banco (mais atualizado que user do AuthContext)
-  const userCredits = userData?.credits ?? 0;
+  // Créditos podem estar em userData.data.credits (estrutura do Base44) ou userData.credits
+  const userCredits = userData?.data?.credits ?? userData?.credits ?? 0;
   const hasCredits = user?.role === "admin" || userCredits > 0;
 
   const { data: holidayData = [] } = useQuery({
@@ -159,7 +160,7 @@ export default function Schedule() {
     try {
       // Buscar créditos FRESCOS do banco antes de qualquer operação
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.credits ?? 0;
+      const currentCredits = latestUser?.data?.credits ?? latestUser?.credits ?? 0;
 
       if (user?.role !== "admin") {
         if (currentCredits <= 0) {
@@ -186,7 +187,7 @@ export default function Schedule() {
 
       // Debitar crédito IMEDIATAMENTE após criar o booking
       if (latestUser?.id && user?.role !== "admin") {
-        await base44.entities.User.update(latestUser.id, { credits: currentCredits - 1 });
+        await base44.entities.User.update(latestUser.id, { data: { ...latestUser.data, credits: currentCredits - 1 } });
       }
 
       invalidate();
@@ -231,11 +232,11 @@ export default function Schedule() {
     try {
       // Buscar créditos frescos do banco
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
-      const currentCredits = latestUser?.credits ?? 0;
+      const currentCredits = latestUser?.data?.credits ?? latestUser?.credits ?? 0;
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
       // Devolver crédito IMEDIATAMENTE após cancelar
       if (latestUser?.id && user?.role !== "admin") {
-        await base44.entities.User.update(latestUser.id, { credits: currentCredits + 1 });
+        await base44.entities.User.update(latestUser.id, { data: { ...latestUser.data, credits: currentCredits + 1 } });
       }
       invalidate();
       toast.success("Reserva cancelada! Crédito devolvido.");

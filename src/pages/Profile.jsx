@@ -64,10 +64,12 @@ export default function Profile() {
   const planMaxCredits = { "4_aulas": 4, "8_aulas": 8, "12_aulas": 12, "avulsa": 1 };
 
   // userEntity tem os créditos mais atualizados (admin pode ter editado)
+  // Créditos/plano podem estar em userEntity.data.credits (estrutura do Base44) ou na raiz
+  const entityData = userEntity?.data || {};
   const currentUser = userEntity || userData || user;
-  const plan = currentUser?.plan || "4_aulas";
+  const plan = entityData?.plan || currentUser?.plan || "4_aulas";
   const planData = planInfo[plan] || planInfo["4_aulas"];
-  const credits = currentUser?.credits ?? 0;
+  const credits = entityData?.credits ?? currentUser?.credits ?? 0;
   const maxCredits = planMaxCredits[plan] || 4;
   const usedThisMonth = monthBookings.length;
 
