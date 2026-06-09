@@ -25,7 +25,7 @@ export function ThemeProvider({ children }) {
     };
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  }, [setTheme]);
 
   const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
