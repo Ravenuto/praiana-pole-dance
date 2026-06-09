@@ -6,21 +6,36 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
-  Menu, X, LogOut,
+  Menu, X, LogOut, ChevronDown,
   Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings } from
 "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
-const NAV_LINKS = [
-{ to: "/", label: "Início", icon: Home },
-{ to: "/aulas", label: "Aulas", icon: CalendarDays },
-{ to: "/minhas-reservas", label: "Reservas", icon: Bookmark },
-{ to: "/recados", label: "Recados", icon: Megaphone },
-{ to: "/feed", label: "Feed", icon: ImageIcon },
-{ to: "/planos", label: "Planos", icon: CreditCard },
-{ to: "/notificacoes", label: "Notif.", icon: Bell, hideInMobile: true },
-{ to: "/perfil", label: "Perfil", icon: User },
-{ to: "/configuracoes", label: "Config.", icon: Settings }];
+const PRIMARY_LINKS = [
+  { to: "/", label: "Início", icon: Home }
+];
 
+const MINHA_CONTA_LINKS = [
+  { to: "/perfil", label: "Perfil", icon: User },
+  { to: "/configuracoes", label: "Configurações", icon: Settings },
+];
+
+const MINHAS_AULAS_LINKS = [
+  { to: "/aulas", label: "Agenda", icon: CalendarDays },
+  { to: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
+];
+
+const COMUNIDADE_LINKS = [
+  { to: "/feed", label: "Feed", icon: ImageIcon },
+  { to: "/recados", label: "Recados", icon: Megaphone },
+  { to: "/planos", label: "Planos", icon: CreditCard },
+];
 
 const ADMIN_LINK = { to: "/admin", label: "Admin", icon: ShieldCheck };
 
@@ -31,8 +46,42 @@ export default function Navbar() {
   const isAdmin = user?.role === "admin";
   const unreadCount = useUnreadCount(user?.email);
 
-  const links = isAdmin ? [...NAV_LINKS, ADMIN_LINK] : NAV_LINKS;
   const isActive = (path) => location.pathname === path;
+  
+  const renderNavGroup = (label, links, icon) => {
+    const Icon = icon;
+    const isGroupActive = links.some(link => isActive(link.to));
+    
+    return (
+      <DropdownMenu key={label}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-auto px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors gap-1 ${
+              isGroupActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            {label}
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {links.map((link) => {
+            const LinkIcon = link.icon;
+            return (
+              <DropdownMenuItem key={link.to} asChild>
+                <Link to={link.to} className="flex items-center gap-2 cursor-pointer">
+                  <LinkIcon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/50">
@@ -51,25 +100,21 @@ export default function Navbar() {
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-0.5">
-            {links.map((link) => {
-              const isNotif = link.to === "/notificacoes";
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`relative px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {link.label}
-                  {isNotif && unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+            {PRIMARY_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {renderNavGroup("Minhas Aulas", MINHAS_AULAS_LINKS, CalendarDays)}
+            {renderNavGroup("Comunidade", COMUNIDADE_LINKS, Megaphone)}
+            {renderNavGroup("Minha Conta", MINHA_CONTA_LINKS, User)}
+            {isAdmin && renderNavGroup("Admin", [ADMIN_LINK], ShieldCheck)}
           </div>
 
           {/* Desktop actions */}
@@ -102,28 +147,58 @@ export default function Navbar() {
         {/* Mobile menu */}
         {mobileOpen &&
         <div className="md:hidden pb-4 pt-2">
-            <div className="grid grid-cols-4 gap-1.5 mb-3">
-              {links.filter(l => !l.hideInMobile).map((link) => {
-              const Icon = link.icon;
-              const active = isActive(link.to);
-              const adminLink = link.to === "/admin";
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 rounded-xl text-center transition-colors ${
-                  active ?
-                  "bg-primary/10 text-primary" :
-                  adminLink ?
-                  "bg-amber-50 text-amber-700 hover:bg-amber-100" :
-                  "text-muted-foreground hover:text-foreground hover:bg-muted"}`
-                  }>
+            <div className="grid grid-cols-3 gap-1.5 mb-3">
+              {PRIMARY_LINKS.map((link) => {
+                const Icon = link.icon;
+                const active = isActive(link.to);
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 rounded-xl text-center transition-colors ${
+                      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                  >
                     <Icon className="h-5 w-5" />
                     <span className="text-[10px] font-medium leading-tight">{link.label}</span>
-                  </Link>);
-
-            })}
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="space-y-1.5 mb-3">
+              {[
+                { label: "Minhas Aulas", links: MINHAS_AULAS_LINKS },
+                { label: "Comunidade", links: COMUNIDADE_LINKS },
+                { label: "Minha Conta", links: MINHA_CONTA_LINKS },
+                ...(isAdmin ? [{ label: "Admin", links: [ADMIN_LINK] }] : []),
+              ].map((group) => (
+                <DropdownMenu key={group.label}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between h-8 text-xs"
+                    >
+                      {group.label}
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40">
+                    {group.links.map((link) => {
+                      const Icon = link.icon;
+                      return (
+                        <DropdownMenuItem key={link.to} asChild>
+                          <Link to={link.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 cursor-pointer">
+                            <Icon className="h-4 w-4" />
+                            {link.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ))}
             </div>
             <div className="pt-2 border-t border-border flex items-center justify-between px-1">
               <span className="text-xs text-muted-foreground truncate max-w-[60%]">
