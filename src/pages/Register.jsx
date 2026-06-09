@@ -59,21 +59,10 @@ export default function Register() {
         phone: phone,
         birth_date: birthDate
       });
-      // Notifica admins sobre novo cadastro
-      const admins = await base44.entities.User.filter({ role: "admin" });
-      await Promise.all(
-        admins.map((admin) =>
-        base44.entities.Notification.create({
-          user_email: admin.email,
-          type: "new_post",
-          title: "Nova aluna cadastrada! 🎉",
-          message: `${fullName || email} acabou de se cadastrar no app. Não esqueça de ativar o plano dela!`,
-          link: "/admin",
-          read: false,
-          actor_name: fullName || email
-        })
-        )
-      );
+      // Notifica admins sobre novo cadastro (via backend para evitar erro de permissão)
+      await base44.functions.invoke("notifyAdminNewStudent", {
+        data: { full_name: fullName, email }
+      });
       // Mostrar tela de aguardando aprovação
       setShowOtp(false);
       setShowPendingApproval(true);
