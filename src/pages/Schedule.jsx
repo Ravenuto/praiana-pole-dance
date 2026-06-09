@@ -179,7 +179,29 @@ export default function Schedule() {
         }
       }
 
-      await base44.entities.Booking.create({
+      // Optimistic update: update myBookings cache immediately
+      queryClient.setQueryData(
+        ["myBookings", selectedDate, user?.email],
+        (prev) => [...(prev || []), { 
+          id: `temp-${Date.now()}`,
+          session_id: session.id,
+          session_date: selectedDate,
+          session_time: session.time,
+          class_type_name: session.class_type_name,
+          student_name: user?.full_name || "",
+          student_email: user?.email,
+          status: "confirmada"
+        }]
+      );
+
+      // Optimistic update: update user credits cache
+      queryClient.setQueryData(
+        ["userCredits", user?.email],
+        (prev) => prev ? { ...prev, data: { ...(prev.data || {}), credits: currentCredits - 1 } } : null
+      );
+
+      // Then actually create the booking
+      const newBooking = await base44.entities.Booking.create({
         session_id: session.id,
         session_date: selectedDate,
         session_time: session.time,
@@ -189,11 +211,17 @@ export default function Schedule() {
         status: "confirmada"
       });
 
-      // Debitar crédito IMEDIATAMENTE após criar o booking (limpar data.data corrompido ao salvar)
+      // Debitar crédito
       if (latestUser?.id && user?.role !== "admin") {
         const cleanData = Object.fromEntries(Object.entries(latestUser.data || {}).filter(([k]) => k !== 'data'));
         await base44.entities.User.update(latestUser.id, { data: { ...cleanData, credits: currentCredits - 1 } });
       }
+
+      // Update bookings list with actual booking
+      queryClient.setQueryData(
+        ["bookings", selectedDate],
+        (prev) => [...(prev || []), newBooking]
+      );
 
       invalidate();
       toast.success(`Aula reservada! Créditos restantes: ${user?.role !== "admin" ? currentCredits - 1 : "∞"}`);
@@ -212,6 +240,7 @@ export default function Schedule() {
       }
     } catch (err) {
       toast.error("Erro ao reservar aula: " + (err?.message || ""));
+      invalidate();
     }
     setLoadingSession(null);
   };
@@ -238,12 +267,28 @@ export default function Schedule() {
       // Buscar créditos frescos do banco
       const [latestUser] = await base44.entities.User.filter({ email: user?.email }, "-created_date", 1);
       const currentCredits = getCredits(latestUser);
+
+      // Optimistic update: remove booking from cache and restore credits
+      queryClient.setQueryData(
+        ["myBookings", selectedDate, user?.email],
+        (prev) => (prev || []).filter(b => b.id !== booking.id)
+      );
+
+      // Optimistic update: update user credits cache
+      queryClient.setQueryData(
+        ["userCredits", user?.email],
+        (prev) => prev ? { ...prev, data: { ...(prev.data || {}), credits: currentCredits + 1 } } : null
+      );
+
+      // Actually cancel the booking
       await base44.entities.Booking.update(booking.id, { status: "cancelada" });
-      // Devolver crédito IMEDIATAMENTE após cancelar (limpar data.data corrompido ao salvar)
+      
+      // Devolver crédito
       if (latestUser?.id && user?.role !== "admin") {
         const cleanData = Object.fromEntries(Object.entries(latestUser.data || {}).filter(([k]) => k !== 'data'));
         await base44.entities.User.update(latestUser.id, { data: { ...cleanData, credits: currentCredits + 1 } });
       }
+      
       invalidate();
       toast.success("Reserva cancelada! Crédito devolvido.");
       // Notificar admins com data em formato brasileiro
@@ -261,6 +306,7 @@ export default function Schedule() {
       }
     } catch (err) {
       toast.error("Erro ao cancelar: " + (err?.message || ""));
+      invalidate();
     }
     setLoadingSession(null);
   };

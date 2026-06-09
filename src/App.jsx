@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/lib/ThemeContext"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 
@@ -25,7 +26,19 @@ import Settings from '@/pages/Settings';
 import About from '@/pages/About';
 import BottomTabs from '@/components/mobile/BottomTabs';
 
+const AnimatedRoute = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    transition={{ duration: 0.3 }}
+  >
+    {children}
+  </motion.div>
+);
+
 const AuthenticatedApp = () => {
+  const location = useLocation();
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
@@ -51,27 +64,29 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/aulas" element={<Schedule />} />
-            <Route path="/minhas-reservas" element={<MyBookings />} />
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/recados" element={<Notices />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/perfil" element={<Profile />} />
-            <Route path="/planos" element={<Plans />} />
-            <Route path="/notificacoes" element={<Notifications />} />
-            <Route path="/configuracoes" element={<Settings />} />
-            <Route path="/sobre" element={<About />} />
+      <AnimatePresence mode="wait">
+        <Routes key={location.pathname}>
+          <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
+          <Route path="/forgot-password" element={<AnimatedRoute><ForgotPassword /></AnimatedRoute>} />
+          <Route path="/reset-password" element={<AnimatedRoute><ResetPassword /></AnimatedRoute>} />
+          <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<AnimatedRoute><Home /></AnimatedRoute>} />
+              <Route path="/aulas" element={<AnimatedRoute><Schedule /></AnimatedRoute>} />
+              <Route path="/minhas-reservas" element={<AnimatedRoute><MyBookings /></AnimatedRoute>} />
+              <Route path="/feed" element={<AnimatedRoute><Feed /></AnimatedRoute>} />
+              <Route path="/recados" element={<AnimatedRoute><Notices /></AnimatedRoute>} />
+              <Route path="/admin" element={<AnimatedRoute><AdminDashboard /></AnimatedRoute>} />
+              <Route path="/perfil" element={<AnimatedRoute><Profile /></AnimatedRoute>} />
+              <Route path="/planos" element={<AnimatedRoute><Plans /></AnimatedRoute>} />
+              <Route path="/notificacoes" element={<AnimatedRoute><Notifications /></AnimatedRoute>} />
+              <Route path="/configuracoes" element={<AnimatedRoute><Settings /></AnimatedRoute>} />
+              <Route path="/sobre" element={<AnimatedRoute><About /></AnimatedRoute>} />
+            </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </AnimatePresence>
       <BottomTabs />
     </>
   );
