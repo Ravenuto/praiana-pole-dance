@@ -130,11 +130,14 @@ export default function ManageStudents() {
       const users = await base44.entities.User.filter({ email: manualForm.email });
       if (users[0]) {
         await base44.entities.User.update(users[0].id, {
-          phone: manualForm.phone,
-          birth_date: manualForm.birth_date,
-          plan: manualForm.plan,
-          credits: manualForm.credits,
-          plan_start_date: format(new Date(), "yyyy-MM-dd"),
+          data: {
+            ...(users[0].data || {}),
+            phone: manualForm.phone,
+            birth_date: manualForm.birth_date,
+            plan: manualForm.plan,
+            credits: manualForm.credits,
+            plan_start_date: format(new Date(), "yyyy-MM-dd"),
+          }
         });
       }
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
@@ -151,29 +154,28 @@ export default function ManageStudents() {
     const selectedPlan = plans.find((p) => p.key === plan);
     const credits = selectedPlan?.credits || 4;
     if (student.is_invited) {
-      // Para convites pendentes, atualiza StudentInvitation
-      await base44.entities.StudentInvitation.update(student.id, {
-        plan,
-        credits,
-      });
+      await base44.entities.StudentInvitation.update(student.id, { plan, credits });
     } else {
-      // Para usuários normais
       await base44.entities.User.update(student.id, {
-        plan,
-        credits,
-        plan_start_date: format(new Date(), "yyyy-MM-dd"),
+        data: { ...(student.data || {}), plan, credits, plan_start_date: format(new Date(), "yyyy-MM-dd") }
       });
     }
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits"] });
     toast.success("Plano atualizado! Créditos resetados para " + credits);
   };
 
   const handleSaveCredits = async () => {
     if (!creditDialog) return;
     setSavingCredit(true);
-    const newCredits = Math.max(0, (creditDialog.student.credits || 0) + creditValue);
-    await base44.entities.User.update(creditDialog.student.id, { credits: newCredits });
+    const student = creditDialog.student;
+    const newCredits = Math.max(0, (student.credits || 0) + creditValue);
+    // Salvar dentro de data{} que é onde o Base44 armazena os campos customizados
+    await base44.entities.User.update(student.id, {
+      data: { ...(student.data || {}), credits: newCredits }
+    });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits"] });
     toast.success("Créditos atualizados!");
     setSavingCredit(false);
     setCreditDialog(null);
@@ -188,7 +190,9 @@ export default function ManageStudents() {
     }
     // Para usuários normais, apenas alterna o status
     const newStatus = student.is_active === false ? true : false;
-    await base44.entities.User.update(student.id, { is_active: newStatus });
+    await base44.entities.User.update(student.id, {
+      data: { ...(student.data || {}), is_active: newStatus }
+    });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     toast.success(newStatus ? "Aluna ativada" : "Aluna desativada");
   };
@@ -245,15 +249,20 @@ export default function ManageStudents() {
       return toast.error("Não é possível editar convites pendentes");
     }
     setSavingEdit(true);
-    await base44.entities.User.update(editDialog.student.id, {
-      plan: editDialog.student.plan,
-      credits: editDialog.student.credits,
-      phone: editDialog.phone,
-      birth_date: editDialog.birth_date,
-      notes: editDialog.notes,
-      plan_start_date: editDialog.plan_start_date,
+    const student = editDialog.student;
+    await base44.entities.User.update(student.id, {
+      data: {
+        ...(student.data || {}),
+        plan: student.plan,
+        credits: student.credits,
+        phone: editDialog.phone,
+        birth_date: editDialog.birth_date,
+        notes: editDialog.notes,
+        plan_start_date: editDialog.plan_start_date,
+      }
     });
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+    queryClient.invalidateQueries({ queryKey: ["userCredits"] });
     toast.success("Dados salvos!");
     setSavingEdit(false);
     setEditDialog(null);

@@ -24,13 +24,16 @@ Deno.serve(async (req) => {
     console.log(`Total de convites pendentes: ${invitations.length}`);
 
     // Combinar usuários e convites
+    // Aplanar user.data para a raiz para que credits, plan, phone, etc. sejam acessíveis diretamente
     const combinedUsers = [
-      ...allUsers,
+      ...allUsers.map(u => ({ ...u, ...(u.data || {}) })),
       ...invitations.map(inv => ({
         id: inv.id,
         email: inv.email,
         full_name: inv.full_name || inv.email,
         role: inv.role || 'user',
+        plan: inv.plan,
+        credits: inv.credits,
         is_invited: true,
         created_date: inv.invited_date || inv.created_date
       }))
