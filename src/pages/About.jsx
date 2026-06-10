@@ -87,11 +87,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Regras */}
-      <section className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-        <StudioRules />
-      </section>
-
       {/* Modalidades */}
       {classTypes.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
@@ -136,6 +131,11 @@ export default function About() {
           </div>
         </section>
       )}
+
+      {/* Regras */}
+      <section className="max-w-2xl mx-auto px-4 sm:px-6 pb-12">
+        <StudioRules />
+      </section>
     </div>
   );
 }
