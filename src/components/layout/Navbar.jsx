@@ -4,21 +4,18 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
 
 import { base44 } from "@/api/base44Client";
-import { useUnreadCount } from "@/hooks/useNotifications";
 import {
   Menu, X, LogOut, ChevronDown, MoreVertical,
-  Calendar, Bookmark, Megaphone, Image as ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Info } from
+  Calendar, Bookmark, CreditCard, User, ShieldCheck, Settings, Info } from
 "lucide-react";
 
 const PRIMARY_TABS = [
   { path: "/aulas", label: "Agenda", icon: Calendar },
-  { path: "/recados", label: "Recados", icon: Megaphone },
-  { path: "/feed", label: "Feed", icon: ImageIcon },
+  { path: "/minhas-reservas", label: "Reservas", icon: Bookmark },
   { path: "/perfil", label: "Perfil", icon: User },
 ];
 
 const MORE_TABS = [
-  { path: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
   { path: "/planos", label: "Planos", icon: CreditCard },
   { path: "/sobre", label: "Sobre", icon: Info },
   { path: "/configuracoes", label: "Configurações", icon: Settings },
@@ -30,7 +27,7 @@ export default function Navbar() {
   const { user } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
-  const unreadCount = useUnreadCount(user?.email);
+
 
   const isActive = (path) => location.pathname === path;
 
@@ -139,14 +136,6 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <div className="flex items-center gap-1 md:hidden">
-            <Link to="/notificacoes" className="relative p-2">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </Link>
             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>

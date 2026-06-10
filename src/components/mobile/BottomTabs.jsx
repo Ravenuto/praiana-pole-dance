@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Calendar, Image as ImageIcon, User, MoreVertical, Bookmark, Megaphone, CreditCard, Settings, Info, ShieldCheck } from "lucide-react";
+import { Calendar, User, MoreVertical, Bookmark, CreditCard, Settings, Info, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -11,13 +11,11 @@ export default function BottomTabs() {
 
   const primaryTabs = [
     { path: "/aulas", label: "Agenda", icon: Calendar },
-    { path: "/recados", label: "Recados", icon: Megaphone },
-    { path: "/feed", label: "Feed", icon: ImageIcon },
+    { path: "/minhas-reservas", label: "Reservas", icon: Bookmark },
     { path: "/perfil", label: "Perfil", icon: User },
   ];
 
   const moreTabs = [
-    { path: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
     { path: "/planos", label: "Planos", icon: CreditCard },
     { path: "/sobre", label: "Sobre", icon: Info },
     { path: "/configuracoes", label: "Configurações", icon: Settings },
