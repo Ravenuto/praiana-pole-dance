@@ -1,31 +1,51 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronUp, BookOpen } from "lucide-react";
-
-const rules = [
-  {
-    title: "Cancelamento de aulas",
-    content: "O cancelamento deve ser feito com no mínimo 4 horas de antecedência. Após esse prazo, o crédito não será devolvido.",
-  },
-  {
-    title: "Créditos e validade",
-    content: "Os créditos têm validade de 1 mês a partir da data de início do plano. Créditos não utilizados dentro do período não são transferidos.",
-  },
-  {
-    title: "Pontualidade",
-    content: "Pedimos que chegue com pelo menos 5 minutos de antecedência. Alunas com atraso superior a 10 minutos poderão não ser admitidas na aula.",
-  },
-  {
-    title: "Fila de espera",
-    content: "Quando a aula estiver lotada, você pode entrar na fila de espera. Ao surgir uma vaga, você será notificada automaticamente.",
-  },
-  {
-    title: "Feriados",
-    content: "Nos feriados marcados no sistema não haverá aulas. Verifique o calendário antes de reservar.",
-  },
-];
+import React, { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, BookOpen, Loader2 } from "lucide-react";
+import { getStudioSettings } from "@/lib/studioSettings";
 
 export default function StudioRules() {
   const [open, setOpen] = useState(null);
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    getStudioSettings().then(setSettings);
+  }, []);
+
+  if (!settings) return (
+    <div className="flex justify-center py-6">
+      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+    </div>
+  );
+
+  const bookingHours = settings.booking_min_hours || "4";
+  const cancelHours = settings.cancel_min_hours || "4";
+  const lateMins = settings.late_tolerance_minutes || "15";
+
+  const rules = [
+    {
+      title: "Agendamento de aulas",
+      content: `O agendamento deve ser feito com no mínimo ${bookingHours} hora${bookingHours !== "1" ? "s" : ""} de antecedência.`,
+    },
+    {
+      title: "Cancelamento de aulas",
+      content: `O cancelamento deve ser feito com no mínimo ${cancelHours} hora${cancelHours !== "1" ? "s" : ""} de antecedência. Após esse prazo, o crédito não será devolvido.`,
+    },
+    {
+      title: "Créditos e validade",
+      content: settings.rule_credits,
+    },
+    {
+      title: "Pontualidade",
+      content: `Alunas com atraso superior a ${lateMins} minutos poderão não ser admitidas na aula.`,
+    },
+    {
+      title: "Fila de espera",
+      content: settings.rule_waitlist,
+    },
+    {
+      title: "Feriados",
+      content: settings.rule_holidays,
+    },
+  ];
 
   return (
     <div className="bg-card border border-border rounded-2xl p-5">

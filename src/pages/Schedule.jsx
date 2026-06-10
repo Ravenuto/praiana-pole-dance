@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
 import { getCredits } from "@/utils";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { getStudioSettings } from "@/lib/studioSettings";
 
 function getTodayDayKey() {
   const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
@@ -177,6 +178,17 @@ export default function Schedule() {
           setLoadingSession(null);
           return;
         }
+        // Verificar antecedência mínima para marcar
+        const studioSettings = await getStudioSettings();
+        const minHours = parseInt(studioSettings.booking_min_hours || "4", 10);
+        const [h, m] = (session.time || "00:00").split(":").map(Number);
+        const classDateTime = new Date(`${selectedDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+        const diffMs = classDateTime - new Date();
+        if (diffMs <= minHours * 60 * 60 * 1000) {
+          toast.error(`Agendamento não permitido: faltam menos de ${minHours} hora${minHours !== 1 ? "s" : ""} para a aula.`, { duration: 5000 });
+          setLoadingSession(null);
+          return;
+        }
       }
 
       // Optimistic update: update myBookings cache immediately
@@ -250,11 +262,13 @@ export default function Schedule() {
     if (!booking) return;
 
     // Verificar janela de cancelamento
+    const studioSettings = await getStudioSettings();
+    const cancelMinHours = parseInt(studioSettings.cancel_min_hours || "4", 10);
     const [h, m] = (session.time || "00:00").split(":").map(Number);
     const classDateTime = new Date(`${selectedDate}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
     const diffMs = classDateTime - new Date();
-    if (diffMs <= 4 * 60 * 60 * 1000 && diffMs > 0) {
-      toast.error("Cancelamento não permitido: faltam menos de 4 horas para a aula.", { duration: 5000 });
+    if (diffMs <= cancelMinHours * 60 * 60 * 1000 && diffMs > 0) {
+      toast.error(`Cancelamento não permitido: faltam menos de ${cancelMinHours} hora${cancelMinHours !== 1 ? "s" : ""} para a aula.`, { duration: 5000 });
       return;
     }
     if (diffMs <= 0) {
