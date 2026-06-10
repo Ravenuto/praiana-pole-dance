@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { motion } from "framer-motion";
+import StudioRules from "@/components/settings/StudioRules";
 
 export default function About() {
   const { data: classTypes = [] } = useQuery({
@@ -84,6 +85,11 @@ export default function About() {
             </motion.div>
           </div>
         </div>
+      </section>
+
+      {/* Regras */}
+      <section className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <StudioRules />
       </section>
 
       {/* Modalidades */}

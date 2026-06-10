@@ -1,6 +1,5 @@
 import React from "react";
 import ChangePassword from "@/components/settings/ChangePassword";
-import StudioRules from "@/components/settings/StudioRules";
 import { useTheme } from "@/lib/ThemeContext";
 import { Sun, Moon } from "lucide-react";
 
@@ -45,8 +44,7 @@ export default function Settings() {
       {/* Trocar senha */}
       <ChangePassword />
 
-      {/* Regras do estúdio */}
-      <StudioRules />
+
     </div>
   );
 }
