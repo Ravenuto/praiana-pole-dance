@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getStudioSettings } from "@/lib/studioSettings";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,8 @@ export default function MyBookings() {
   const handleCancel = async (booking) => {
     // Verificar janela de cancelamento
     if (booking.session_time) {
+      const studioSettings = await getStudioSettings();
+      const cancelMinHours = parseInt(studioSettings.cancel_min_hours || "4", 10);
       const [h, m] = booking.session_time.split(":").map(Number);
       const classDateTime = new Date(`${booking.session_date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
       const diffMs = classDateTime - new Date();
@@ -48,8 +51,8 @@ export default function MyBookings() {
         toast.error("Esta aula já passou, não é possível cancelar.", { duration: 5000 });
         return;
       }
-      if (diffMs <= 4 * 60 * 60 * 1000) {
-        toast.error("Cancelamento não permitido: faltam menos de 4 horas para a aula.", { duration: 5000 });
+      if (diffMs <= cancelMinHours * 60 * 60 * 1000) {
+        toast.error(`Cancelamento não permitido: faltam menos de ${cancelMinHours} hora${cancelMinHours !== 1 ? "s" : ""} para a aula.`, { duration: 5000 });
         return;
       }
     }
