@@ -6,36 +6,22 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
-  Menu, X, LogOut, ChevronDown, MoreHorizontal,
-  Home, CalendarDays, Bookmark, Megaphone, Image as ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users, Info } from
+  Menu, X, LogOut, ChevronDown, MoreVertical,
+  Calendar, Bookmark, Megaphone, Image as ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Info } from
 "lucide-react";
 
-const MINHA_CONTA_LINKS = [
-  { to: "/perfil", label: "Perfil", icon: User },
-  { to: "/configuracoes", label: "Configurações", icon: Settings },
+const PRIMARY_TABS = [
+  { path: "/aulas", label: "Agenda", icon: Calendar },
+  { path: "/recados", label: "Recados", icon: Megaphone },
+  { path: "/feed", label: "Feed", icon: ImageIcon },
+  { path: "/perfil", label: "Perfil", icon: User },
 ];
 
-const MINHAS_AULAS_LINKS = [
-  { to: "/aulas", label: "Agenda", icon: CalendarDays },
-  { to: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
-];
-
-const COMUNIDADE_LINKS = [
-  { to: "/feed", label: "Feed", icon: ImageIcon },
-];
-
-const SIDEBAR_GROUPS = [
-  { key: "minhas_aulas", label: "Minhas Aulas", icon: CalendarDays, links: MINHAS_AULAS_LINKS, expandable: true },
-  { key: "comunidade", label: "Comunidade", icon: Users, links: COMUNIDADE_LINKS, expandable: true },
-  { key: "minha_conta", label: "Minha Conta", icon: User, links: MINHA_CONTA_LINKS, expandable: true },
-];
-
-const DIRECT_LINKS = [
-  { to: "/recados", label: "Recados", icon: Megaphone },
-];
-
-const FOOTER_LINKS = [
-  { to: "/sobre", label: "Sobre", icon: Users },
+const MORE_TABS = [
+  { path: "/minhas-reservas", label: "Minhas Reservas", icon: Bookmark },
+  { path: "/planos", label: "Planos", icon: CreditCard },
+  { path: "/sobre", label: "Sobre", icon: Info },
+  { path: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export default function Navbar() {
@@ -74,83 +60,66 @@ export default function Navbar() {
             <span className="font-heading text-base font-semibold tracking-tight">Praiana</span>
           </Link>
 
-          {/* Desktop links - mirror mobile bottom tabs */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link
-              to="/aulas"
-              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                isActive("/aulas") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              Agenda
-            </Link>
-            <Link
-              to="/recados"
-              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                isActive("/recados") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              Recados
-            </Link>
-            <Link
-              to="/feed"
-              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                isActive("/feed") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              Feed
-            </Link>
-            <Link
-              to="/perfil"
-              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                isActive("/perfil") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              Perfil
-            </Link>
-            
+          {/* Desktop tabs - identical to mobile */}
+          <div className="hidden md:flex items-center gap-2">
+            {PRIMARY_TABS.map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+                <Link
+                  key={tab.path}
+                  to={tab.path}
+                  className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+                    isActive(tab.path)
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <IconComponent className="h-5 w-5" />
+                  <span className="text-xs font-medium">{tab.label}</span>
+                </Link>
+              );
+            })}
+
             {/* Mais menu */}
             <div className="relative group">
-              <button className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors flex items-center gap-1 ${
-                ["/minhas-reservas", "/planos", "/configuracoes", ...(isAdmin ? ["/admin"] : [])].some(p => isActive(p)) 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}>
-                Mais
-                <ChevronDown className="h-3 w-3" />
+              <button
+                className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+                  MORE_TABS.some(tab => isActive(tab.path))
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <MoreVertical className="h-5 w-5" />
+                <span className="text-xs font-medium">Mais</span>
               </button>
-              <div className="absolute hidden group-hover:block right-0 mt-0 bg-card border border-border rounded-lg shadow-lg min-w-max z-50">
-                <Link
-                  to="/minhas-reservas"
-                  className={`block px-4 py-2 text-sm transition-colors ${
-                    isActive("/minhas-reservas") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  Minhas Reservas
-                </Link>
-                <Link
-                  to="/planos"
-                  className={`block px-4 py-2 text-sm transition-colors ${
-                    isActive("/planos") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  Planos
-                </Link>
-                <Link
-                  to="/configuracoes"
-                  className={`block px-4 py-2 text-sm transition-colors ${
-                    isActive("/configuracoes") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  Configurações
-                </Link>
+              <div className="absolute hidden group-hover:block right-0 mt-1 bg-card border border-border rounded-lg shadow-lg min-w-max z-50">
+                {MORE_TABS.map((tab) => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <Link
+                      key={tab.path}
+                      to={tab.path}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                        isActive(tab.path)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <IconComponent className="h-4 w-4" />
+                      {tab.label}
+                    </Link>
+                  );
+                })}
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className={`block px-4 py-2 text-sm transition-colors ${
-                      isActive("/admin") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                      isActive("/admin")
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-muted"
                     }`}
                   >
+                    <ShieldCheck className="h-4 w-4" />
                     Admin
                   </Link>
                 )}
@@ -184,152 +153,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Sidebar - Always Rendered */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 top-14 z-30 bg-black/50 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-        
-        <div 
-          className={`fixed right-0 top-14 h-screen w-64 bg-card border-l border-border overflow-y-auto z-40 md:hidden transition-all duration-300 ${
-            sidebarOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <div className="p-4 space-y-2 flex flex-col h-full">
-            {/* Primary link */}
-            <Link
-              to="/"
-              onClick={handleNavClick}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive("/") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-              }`}
-            >
-              <Home className="h-5 w-5" />
-              <span className="font-medium">Início</span>
-            </Link>
 
-            {/* Direct links */}
-            {DIRECT_LINKS.map((link) => {
-              const LinkIcon = link.icon;
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={handleNavClick}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <LinkIcon className="h-5 w-5" />
-                  <span className="font-semibold">{link.label}</span>
-                </Link>
-              );
-            })}
-
-            <div className="my-1 border-b border-border/30" />
-
-            {/* Sidebar Groups */}
-            {SIDEBAR_GROUPS.map((group) => {
-              const Icon = group.icon;
-              const isExpanded = expandedGroups[group.key];
-              const isGroupActive = group.links.some(l => isActive(l.to));
-              
-              return (
-                <div key={group.key}>
-                  <button
-                    onClick={() => toggleGroup(group.key)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isGroupActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium flex-1 text-left">{group.label}</span>
-                    {group.expandable && (
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                    )}
-                  </button>
-
-                  {/* Always show links for non-expandable, expand for expandable */}
-                  {(group.expandable ? isExpanded : true) && (
-                    <div className="pl-8 py-1 space-y-1">
-                      {group.links.map((link) => {
-                        const LinkIcon = link.icon;
-                        return (
-                          <Link
-                            key={link.to}
-                            to={link.to}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                              isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            <LinkIcon className="h-4 w-4" />
-                            {link.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="my-1 border-b border-border/30" />
-                </div>
-              );
-            })}
-
-            <div className="my-1 border-b border-border/30" />
-
-            {/* Footer Links */}
-            {FOOTER_LINKS.map((link) => {
-              const LinkIcon = link.icon;
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={handleNavClick}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive(link.to) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <LinkIcon className="h-5 w-5" />
-                  <span className="font-semibold">{link.label}</span>
-                </Link>
-              );
-            })}
-
-            {/* Admin Link */}
-            {isAdmin && (
-              <>
-                <div className="my-1 border-b border-border/30" />
-                <Link
-                  to="/admin"
-                  onClick={handleNavClick}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive("/admin") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <ShieldCheck className="h-5 w-5" />
-                  <span className="font-semibold">Admin</span>
-                </Link>
-              </>
-            )}
-
-            {/* Footer */}
-            <div className="mt-auto pt-3 border-t border-border">
-              <div className="px-4 py-2 text-xs text-muted-foreground truncate">
-                {user?.full_name || user?.email}
-              </div>
-              <button
-                onClick={() => base44.auth.logout()}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </nav>);
 
