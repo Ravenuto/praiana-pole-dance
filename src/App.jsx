@@ -66,9 +66,9 @@ const AuthenticatedApp = () => {
     <>
       <AnimatePresence mode="wait">
         <Routes key={location.pathname}>
-          <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
-          <Route path="/forgot-password" element={<AnimatedRoute><ForgotPassword /></AnimatedRoute>} />
-          <Route path="/reset-password" element={<AnimatedRoute><ResetPassword /></AnimatedRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<AnimatedRoute><Home /></AnimatedRoute>} />
