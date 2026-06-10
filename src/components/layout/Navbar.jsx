@@ -74,53 +74,44 @@ export default function Navbar() {
             <span className="font-heading text-base font-semibold tracking-tight">Praiana</span>
           </Link>
 
-          {/* Desktop links - simple layout */}
+          {/* Desktop links - mirror mobile bottom tabs */}
           <div className="hidden md:flex items-center gap-1">
             <Link
-              to="/"
+              to="/aulas"
               className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                isActive("/") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                isActive("/aulas") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
-              Início
+              Agenda
             </Link>
-            {DIRECT_LINKS.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
-                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {SIDEBAR_GROUPS.map((group) => (
-              <Link
-                key={group.key}
-                to={group.links[0].to}
-                className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
-                  group.links.some(l => isActive(l.to)) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {group.label}
-              </Link>
-            ))}
-            {FOOTER_LINKS.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
-                  isActive(link.to) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              to="/recados"
+              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                isActive("/recados") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              Recados
+            </Link>
+            <Link
+              to="/feed"
+              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                isActive("/feed") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              Feed
+            </Link>
+            <Link
+              to="/perfil"
+              className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors ${
+                isActive("/perfil") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              Perfil
+            </Link>
             
             {/* Mais menu */}
             <div className="relative group">
-              <button className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors flex items-center gap-1 ${
+              <button className={`px-3 py-1.5 rounded-lg text-sm font-body font-medium transition-colors flex items-center gap-1 ${
                 ["/minhas-reservas", "/planos", "/configuracoes", ...(isAdmin ? ["/admin"] : [])].some(p => isActive(p)) 
                   ? "bg-primary/10 text-primary" 
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
