@@ -6,8 +6,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import {
-  Menu, X, LogOut, ChevronDown,
-  Home, CalendarDays, Bookmark, Megaphone, ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users, Info } from
+  Menu, X, LogOut, ChevronDown, MoreHorizontal,
+  Home, CalendarDays, Bookmark, Megaphone, Image as ImageIcon, CreditCard, User, ShieldCheck, Bell, Settings, Users, Info } from
 "lucide-react";
 
 const MINHA_CONTA_LINKS = [
@@ -117,16 +117,54 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors ${
-                  isActive("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                Admin
-              </Link>
-            )}
+            
+            {/* Mais menu */}
+            <div className="relative group">
+              <button className={`px-3 py-1.5 rounded-lg text-sm font-body font-semibold transition-colors flex items-center gap-1 ${
+                ["/minhas-reservas", "/planos", "/configuracoes", ...(isAdmin ? ["/admin"] : [])].some(p => isActive(p)) 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}>
+                Mais
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              <div className="absolute hidden group-hover:block right-0 mt-0 bg-card border border-border rounded-lg shadow-lg min-w-max z-50">
+                <Link
+                  to="/minhas-reservas"
+                  className={`block px-4 py-2 text-sm transition-colors ${
+                    isActive("/minhas-reservas") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  Minhas Reservas
+                </Link>
+                <Link
+                  to="/planos"
+                  className={`block px-4 py-2 text-sm transition-colors ${
+                    isActive("/planos") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  Planos
+                </Link>
+                <Link
+                  to="/configuracoes"
+                  className={`block px-4 py-2 text-sm transition-colors ${
+                    isActive("/configuracoes") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  Configurações
+                </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className={`block px-4 py-2 text-sm transition-colors ${
+                      isActive("/admin") ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    Admin
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Desktop actions */}
