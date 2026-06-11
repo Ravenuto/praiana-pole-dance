@@ -10,7 +10,7 @@
     --font-body: 'Inter', sans-serif;
 
     /* Sandbed #FAF7F2 → HSL ~36 43% 97% */
-    --background: 210 100% 98%;
+    --background: 210 20% 98% / 0%;
     /* Driftwood #1A1A1A → HSL ~0 0% 10% */
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
